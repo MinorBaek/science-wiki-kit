@@ -15,9 +15,9 @@ $SkillsDir = if ($env:CLAUDE_SKILLS_DIR) { $env:CLAUDE_SKILLS_DIR } else { Join-
 
 $py = Get-Command python -ErrorAction SilentlyContinue
 if (-not $py) { $py = Get-Command py -ErrorAction SilentlyContinue }
-if (-not $py) { throw "Python 3.9 or newer is required" }
-& $py.Source -c "import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)"
-if ($LASTEXITCODE -ne 0) { throw "Python 3.9 or newer is required" }
+if (-not $py) { throw "Python 3.10 or newer is required" }
+& $py.Source -c "import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)"
+if ($LASTEXITCODE -ne 0) { throw "Python 3.10 or newer is required" }
 
 Write-Host "1/3 Python package (optional: skills also work through junctions into this checkout)"
 # Windows PowerShell 5.1 turns any stderr line of a native command into a terminating error under

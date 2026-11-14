@@ -7,7 +7,7 @@ name = "science-wiki-kit"
 version = "0.1.3"
 description = "Skills, scripts and templates to build and maintain a scientific knowledge wiki (Obsidian-compatible markdown) with an AI coding agent."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = []
 

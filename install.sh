@@ -12,8 +12,8 @@ KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET="${1:-}"
 SKILLS_DIR="${CLAUDE_SKILLS_DIR:-$HOME/.claude/skills}"
 
-command -v python3 >/dev/null 2>&1 || { echo "python3 (3.9 or newer) is required" >&2; exit 1; }
-python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)' || { echo "Python 3.9 or newer is required" >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "python3 (3.10 or newer) is required" >&2; exit 1; }
+python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' || { echo "Python 3.10 or newer is required" >&2; exit 1; }
 
 echo "1/3 Python package (optional: skills also work through symlinks into this checkout)"
 if python3 -m pip install --quiet --user -e "$KIT" 2>/dev/null; then

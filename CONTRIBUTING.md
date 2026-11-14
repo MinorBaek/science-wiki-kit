@@ -4,7 +4,7 @@ Thanks for helping. The kit is small on purpose: standard-library Python, markdo
 
 ## Run the tests
 
-From the repository root, on any platform (Python 3.9 or newer):
+From the repository root, on any platform (Python 3.10 or newer):
 
 ```
 python -I -m unittest discover -s tests

@@ -27,7 +27,7 @@ vocabularies and language are configuration, and sport science is only one worke
 | `docs/GOTCHAS.md` | Operating lessons: the ways a wiki quietly goes wrong, and what to do about each |
 | `wikikit/` | The shared Python package (standard library only) |
 
-Works on Windows, macOS and Linux. Python 3.9 or newer, no third-party dependencies.
+Works on Windows, macOS and Linux. Python 3.10 or newer, no third-party dependencies.
 
 **Vocabulary used throughout**
 - **Source note**: the note of one paper or book chapter (`papers/`, `books/`), as opposed to concept and method notes.
@@ -43,7 +43,7 @@ Works on Windows, macOS and Linux. Python 3.9 or newer, no third-party dependenc
 
 - **An AI coding agent that can read files, edit files and run scripts.** The skills were written and tested with
   [Claude Code](https://claude.com/claude-code). See *Other agents* below for everything else.
-- **Python 3.9+** for the linter and tools.
+- **Python 3.10+** for the linter and tools.
 - **A PDF text extractor**: `pdftotext` (poppler) is the default; `docling` gives better tables. Optional but
   recommended: without fulltext the skills refuse to write quotes or numbers.
 - **Optional integrations**: a reference manager (Zotero through an MCP server is the supported adapter) and a
