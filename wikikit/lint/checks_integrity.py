@@ -358,18 +358,24 @@ def check29(ctx):
 def check30(ctx):
     """Vocabulary sync (INFO): `_VOCABULARY.md` is a GENERATED artifact and the wiki's only synonym
     bridge. Deterministic CONTENT diff (not mtime): `missing` = a live concept/method note absent from
-    the table; `ghost` = a table row whose note no longer exists. Remedy: /vocabulary-update."""
+    the table; `ghost` = a table row whose note no longer exists. Remedy: /vocabulary-update.
+    The canonical cell is read up to the next pipe, so names with spaces or non-ASCII letters count, and
+    both sides are compared in NFC: a vocabulary generated on macOS can spell the name in NFD."""
     vocab = ctx.wiki / ctx.cfg["vocabulary_file"]
     if not vocab.is_file():
         return Result("vocabulary sync SKIPPED (%s not found)" % ctx.cfg["vocabulary_file"],
                       {"check30_missing": 0, "check30_ghost": 0}, {"wiki_check30_vocab_sync.txt": []})
-    rx = re.compile(r"^\|\s*([A-Za-z0-9_-]+)\s*\|[^|]*\|\s*\[\[")  # the `[[` gate excludes header and separator
+    rx = re.compile(r"^\|\s*([^|\[\]]+?)\s*\|[^|]*\|\s*\[\[")  # the `[[` gate excludes header and separator
+
+    def key(name):
+        return unicodedata.normalize("NFC", name).lower()
+
     in_vocab = {}
     for line in split_lines(read_text(vocab)):
         m = rx.match(line)
         if m:
-            in_vocab[m.group(1).lower()] = m.group(1)
-    live = {n.name.lower(): n.name for n in ctx.notes.values() if _cohort_note(ctx, n)}
+            in_vocab[key(m.group(1))] = m.group(1)
+    live = {key(n.name): n.name for n in ctx.notes.values() if _cohort_note(ctx, n)}
     missing = sorted(v for k, v in live.items() if k not in in_vocab)
     ghost = sorted(v for k, v in in_vocab.items() if k not in live)
     lines = ["missing|%s" % x for x in missing] + ["ghost|%s" % x for x in ghost]

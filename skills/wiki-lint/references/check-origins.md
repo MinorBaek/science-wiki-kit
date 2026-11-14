@@ -501,6 +501,13 @@ also be non-deterministic in fixtures.
 
 **The remedy is `/vocabulary-update`** (regenerate, diff, approve), never hand-editing the table.
 
+**Names in any language (v0.1.3, issue #1).** The row parser first accepted only `[A-Za-z0-9_-]` in the canonical
+cell, inherited from a wiki whose canonical names were English slugs. A note named `Fuerza máxima` or even
+`Dinamometría` was listed by the generator and still reported as `missing`. The parser now reads the cell up to
+the next pipe, and both sides are compared in **NFC**, because a vocabulary generated on macOS can spell the same
+name in NFD. Found by a user testing the kit on a Spanish-named synthetic vault: the guarantee "every note the
+generator writes is recognised" had never been tested with a non-ASCII name.
+
 ## check-31
 
 **Four channels for the same promise, and a large set of seals that satisfy none.** An audit of the method found

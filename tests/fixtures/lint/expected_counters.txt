@@ -45,10 +45,11 @@ check5         = 5
 #   occurrence-counting logic SingleSource would also promote (promote = 2), so this guards the distinct-works rule.
 check6_stale   = 0
 check6_promote = 1
-# check7: index coverage in manual mode. 3 notes are missing from index.md, 2 stubs are listed separately.
+# check7: index coverage in manual mode. 3 notes are missing from index.md, 3 stubs are listed separately
+#   (the third, 'Fixture Café Concept', is the Check 30 Unicode fixture; a stub so it moves only this counter).
 # check7_misplaced = 1: Smith_2024_FakePaper (a papers/ note) is listed under '## Books'.
 check7_missing = 3
-check7_stubs   = 2
+check7_stubs   = 3
 check7_misplaced = 1
 # check8 = 1: a book whose chapters_ingested omits a chapter that exists on disk (Fixture_Book_Ch03, whose
 #   status is blank, is NOT a stub and still counts). check9 = 1: a chapter note without a `book:` link.
@@ -148,6 +149,9 @@ check29        = 1
 # check30: _VOCABULARY.md lists every concept/method note EXCEPT Fixture_Orphan (missing = 1) and adds
 #   Fixture_Ghost_Concept, which has no note (ghost = 1). If the row parser breaks, every note is missing; if the
 #   ghost direction is lost, ghost = 0.
+#   Unicode guard: 'Fixture Café Concept' has spaces and an accent, and its vocabulary row spells the name in NFD
+#   while the filename is NFC. With an ASCII-only row parser it is missing (missing = 2); with the wider parser but
+#   no NFC comparison it is missing AND its row is a ghost (missing = 2, ghost = 2). Both failures were observed.
 check30_missing = 1
 check30_ghost   = 1
 # check31 = 1: Fixture_ShortSeal (source_verification: fulltext and nothing else). Negative guards: GoodProvenance,
