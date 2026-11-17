@@ -3,7 +3,7 @@ import datetime
 import json
 from pathlib import Path
 
-from .. import frontmatter
+from .. import frontmatter, vault
 from ..config import _merge, vault_path, wiki_path
 from ..textio import read_text
 from .text import extract_wikilinks, split_lines
@@ -55,7 +55,7 @@ class Context:
         self.concepts = cfg["concepts_folder"]
         self.methods = cfg["methods_folder"]
 
-        self.vault_set = self._vault_basenames()
+        self.vault_set = vault.note_basenames(self.vault, cfg["vault_ignore_dirs"])
         self.notes = self._load_notes()
         self.index_path = self.wiki / "index.md"
         self.index_wikilinks = []
@@ -65,15 +65,6 @@ class Context:
         self.index_targets = sorted({t for t, _, _ in self.index_wikilinks})
 
     # -- loading ---------------------------------------------------------
-    def _vault_basenames(self):
-        ignore = set(self.cfg["vault_ignore_dirs"])
-        names = set()
-        for p in self.vault.rglob("*.md"):
-            if any(part in ignore for part in p.relative_to(self.vault).parts[:-1]):
-                continue
-            names.add(p.stem.lower())
-        return names
-
     def _load_notes(self):
         """notes: {basename: Note}, one entry per basename (a cross-folder collision keeps the last).
         self.files: {folder: [Note]}, EVERY file, so counts taken per folder never undercount."""

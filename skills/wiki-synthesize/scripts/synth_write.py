@@ -46,12 +46,19 @@ def main():
     a = ap.parse_args()
 
     root, cfg = load_config(a.vault_root)
-    path = wiki_path(root, cfg) / (a.note + ".md")
+    wiki = wiki_path(root, cfg)
+    path = wiki / (a.note + ".md")
     if not path.is_file():
         sys.exit("no such note: %s" % path)
+    raw, block = read_text(path), read_text(a.block)
+    # The gate runs here too: a block that skipped synth_validate.py must not reach the note.
+    gate = synthesis.validate(raw, block, wiki, cfg, synthesis.source_stems(wiki, cfg))
+    if gate["RESULT"] != "CLEAN":
+        failed = ", ".join(k for k in ("V1", "V2", "V3", "V4", "V5") if gate[k] == "FAIL")
+        sys.exit("REFUSED: the gate says %s (%s). Run synth_validate.py, fix the block, never the gate."
+                 % (gate["RESULT"], failed))
     try:
-        new, rep = synthesis.insert_block(read_text(path), read_text(a.block), a.absorbed,
-                                          after=a.after, purge_absorbed=a.purge_absorbed)
+        new, rep = synthesis.insert_block(raw, block, a.absorbed, after=a.after, purge_absorbed=a.purge_absorbed)
     except synthesis.SynthError as exc:
         sys.exit("REFUSED: %s" % exc)
     print("%-44s inserts %d lines after `## %s` (line %d)%s; %s" % (

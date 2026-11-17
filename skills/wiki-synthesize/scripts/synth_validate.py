@@ -77,13 +77,17 @@ def main():
         print("sweep: %d blocks, %d clean, %d failing" % (total, total - bad, bad))
         return 1 if bad else 0
 
-    if not a.note or not (a.block or a.block_text):
-        ap.error("need --note and --block (or --block-text), or --sweep")
+    if not a.note:
+        ap.error("need --note (with --block or --block-text to gate a new block), or --sweep")
     note_path = wiki / (a.note + ".md")
     if not note_path.is_file():
         sys.exit("no such note: %s" % note_path)
-    block = a.block_text if a.block_text else read_text(a.block)
-    r = synthesis.validate(read_text(note_path), block, wiki, cfg, sources)
+    text = read_text(note_path)
+    # Without --block, re-check the block the note already carries (the closeout step after a write).
+    block = a.block_text or (read_text(a.block) if a.block else sections.get_section(text, synthesis.BLOCK_HEADING))
+    if not block.strip():
+        sys.exit("%s has no `## %s` block: pass --block to gate a new one" % (a.note, synthesis.BLOCK_HEADING))
+    r = synthesis.validate(text, block, wiki, cfg, sources)
     report(a.note, r)
     return 0 if r["RESULT"] == "CLEAN" else 1
 

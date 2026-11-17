@@ -2,12 +2,13 @@
 import re
 import unicodedata
 
+from ..vault import WIKILINK as _WIKILINK
+
 _COMMENT = re.compile(r"<!--[\s\S]*?-->")
 # Indent-tolerant fences: a fenced block nested in a list carries leading spaces. [ \t]* rather than
 # \s*: in multiline mode \s matches newlines, so ^\s* would let the anchor drift across blank lines.
 _FENCE_BACKTICK = re.compile(r"^[ \t]*```[\s\S]*?^[ \t]*```\s*$", re.M | re.S)
 _FENCE_TILDE = re.compile(r"^[ \t]*~~~[\s\S]*?^[ \t]*~~~\s*$", re.M | re.S)
-_WIKILINK = re.compile(r"\[\[([^\]|#]+?)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
 
 
 def split_lines(text):

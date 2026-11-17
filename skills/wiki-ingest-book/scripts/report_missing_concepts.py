@@ -30,9 +30,8 @@ from wikikit import frontmatter, vault  # noqa: E402
 from wikikit.config import load_config, vault_path  # noqa: E402
 from wikikit.textio import append_log, read_text  # noqa: E402
 
-WIKILINK = re.compile(r"\[\[([^\]|#]+?)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
 SKIP_CHAPTER = re.compile(r"_Ch\d+$")
-SKIP_PAPER = re.compile(r"^[A-Z][a-zA-Z]+_\d{4}(_|$)")
+SKIP_PAPER = re.compile(r"^[^\W\d_]+_\d{4}(_|$)")
 
 
 def main():
@@ -50,7 +49,7 @@ def main():
 
     _, body = frontmatter.parse(read_text(chapter))
     counts = Counter()
-    for m in WIKILINK.finditer(body):
+    for m in vault.WIKILINK.finditer(body):
         target = m.group(1).strip().rstrip("\\")
         if not target:
             continue

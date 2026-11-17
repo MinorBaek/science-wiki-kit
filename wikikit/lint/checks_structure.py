@@ -2,10 +2,11 @@
 import datetime
 import re
 
+from ..vault import WIKILINK
 from .result import Result
 from .text import clean_link_item, split_lines
 
-_LINK = re.compile(r"\[\[([^\]|#]+?)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
+_LINK = WIKILINK
 _CHAPTER_SUFFIX = re.compile(r"_Ch\d+$", re.I)
 
 
@@ -17,8 +18,8 @@ def _index_lines(ctx):
 
 
 def _cells(row):
-    """Non-empty trimmed cells of a markdown table row."""
-    return [c.strip() for c in row.split("|") if c.strip() != ""]
+    """Non-empty trimmed cells of a markdown table row. An escaped `\\|` (a wikilink alias) does not delimit."""
+    return [c.strip() for c in re.split(r"(?<!\\)\|", row) if c.strip() != ""]
 
 
 # ---------------------------------------------------------------- 6
@@ -258,7 +259,7 @@ def check11(ctx):
                 continue
             if not re.match(r"^(→|->)", label):
                 continue
-            moc = re.search(r"\[\[MOC_([A-Za-z0-9_]+)\]\]", cells[1])
+            moc = re.search(r"\[\[(?:[^\]|#]*/)?MOC_([A-Za-z0-9_]+)(?:\\?\|[^\]]*)?\]\]", cells[1])
             if not moc:
                 continue
             sub_slug = moc.group(1).lower().replace("_", "-")

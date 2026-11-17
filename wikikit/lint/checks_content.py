@@ -63,7 +63,8 @@ def check13(ctx):
 
     out = []
     acr = [(a, "/".join(sorted(set(c))), {x.lower() for x in c}) for a, c in acronyms.items()]
-    phr = [(k, "/".join(sorted(set(c))), {x.lower() for x in c}) for k, c in phrases.items()]
+    phr = [(k, "/".join(sorted(set(c))), {x.lower() for x in c}, set(re.findall(r"[a-z0-9]+", k)))
+           for k, c in phrases.items()]
     for n in pool:
         if ctx.stub_exempt_for(13, n.status):
             continue
@@ -77,8 +78,9 @@ def check13(ctx):
                 out.append("%s|%s|%s" % (n.name, alias, shown))
         if phr:
             folded = remove_diacritics(text).lower()
-            for key, shown, canon_lc in phr:
-                if key in folded and me not in canon_lc and not (canon_lc & linked) \
+            words = set(re.findall(r"[a-z0-9]+", folded))
+            for key, shown, canon_lc, key_words in phr:
+                if key_words <= words and key in folded and me not in canon_lc and not (canon_lc & linked) \
                         and re.search(r"\b" + re.escape(key) + r"\b", folded):
                     out.append("%s|%s|%s" % (n.name, key, shown))
     return Result("alias documented without link, INFO", {"check13": len(out)},

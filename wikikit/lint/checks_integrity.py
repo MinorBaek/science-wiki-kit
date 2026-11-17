@@ -7,11 +7,12 @@ from pathlib import Path
 from .. import seals as seal_lib
 from ..synthesis import below_fulltext
 from ..textio import read_text
+from ..vault import WIKILINK
 from .result import Result
 from .text import split_lines, table_cell_count
 
 WARN = "⚠"
-_SUBJECT = re.compile(r"\[\[([A-Za-z_0-9\-]+)")
+_SUBJECT = re.compile(r"\[\[([^\]|#]+)")
 
 
 def _s(value):
@@ -66,15 +67,15 @@ def check22(ctx):
                 glued_prev, glued_next = raw_before.endswith("]]"), raw_after.startswith("[[")
                 owner = None
                 if glued_next and not glued_prev:
-                    m = re.match(r"^\[\[([A-Za-z_0-9\-]+)\]\]", raw_after)
+                    m = re.match(r"^\[\[([^\]|#]+)\]\]", raw_after)
                     if m:
                         owner = m.group(1)
                 if owner is None and before.endswith("]]"):
-                    ms = list(re.finditer(r"\[\[([A-Za-z_0-9\-]+)\]\]", before))
+                    ms = list(re.finditer(r"\[\[([^\]|#]+)\]\]", before))
                     if ms and ms[-1].end() == len(before):
                         owner = ms[-1].group(1)
                 if owner is None:
-                    m = re.match(r"^\[\[([A-Za-z_0-9\-]+)\]\]", after)
+                    m = re.match(r"^\[\[([^\]|#]+)\]\]", after)
                     if m:
                         owner = m.group(1)
                 tail = raw_after.lstrip()
@@ -152,7 +153,7 @@ def check25(ctx):
     radius = ctx.lcfg["defaults"]["unsourced_radius"]
     methods_fields = {f.lower() for f in ctx.lcfg.get("check25_methods_fields", [])}
     cited_rx = re.compile(ctx.lcfg["check25_cited_pattern"]) if ctx.lcfg.get("check25_cited_pattern") else None
-    link_rx = re.compile(r"\[\[([^\]|#]+?)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
+    link_rx = WIKILINK
 
     source_keys, source_stems = set(), set()
     for n in ctx.folder_notes(ctx.papers, ctx.books):

@@ -70,8 +70,8 @@ def numbers(text, is_block=False):
 # ---------------------------------------------------------------- cohort
 
 def _raw_value(text, key):
-    m = re.search(r"^[ \t]*%s[ \t]*:[ \t]*(.*)$" % re.escape(key), text, re.M)
-    return m.group(1).strip().strip('"').rstrip("\r") if m else None
+    v = frontmatter.get_raw(text, key)
+    return None if v is None else v.strip().strip('"')
 
 
 def below_fulltext(seal):
