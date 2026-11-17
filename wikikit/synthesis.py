@@ -124,7 +124,11 @@ def validate(note_text, block, wiki, cfg, sources):
     block_links = vault.links(block)
     body_links = set(vault.links(body))
 
-    v1_bad = [s for s in block_links if s in sources and s not in body_links]
+    # A source the note never uses, or a link that resolves to no note at all (an invented work has no note).
+    note_folders = cfg.get("folders") or [cfg[k] for k in ("papers_folder", "books_folder", "concepts_folder",
+                                                            "methods_folder")]
+    v1_bad = [s for s in block_links if s not in body_links
+              and (s in sources or vault.find_note(wiki, note_folders, s) is None)]
     body_nums = set(numbers(body))
     v2_bad = [n for n in numbers(block, is_block=True) if n not in body_nums]
     v3_bad = [l for l in vault.links(contr) if l not in set(block_links)]
@@ -203,7 +207,7 @@ def insert_block(raw, block_text, absorbed, today=None, after=None, purge_absorb
     action = ""
     if gaps:
         gs, ge = gaps
-        off = len(block) + 1
+        off = len(block) + 1 if gs >= insert_at else 0  # the block only shifts lines BELOW it
         if purge_absorbed:
             out = out[:gs + off] + out[ge + off:]
             action = "DELETED (--purge-absorbed)"

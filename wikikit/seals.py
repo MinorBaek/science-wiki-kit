@@ -71,7 +71,8 @@ def append_seals(wiki, cfg, seals, date, tag, dry_run=False, source="PDF"):
         elif re.search(r"^source_verification:", fm, re.M):
             # An unquoted single-line scalar (`source_verification: fulltext`) is quoted on the way in.
             plain = re.search(r"^source_verification:[ \t]*([^\n]*?)[ \t]*$", fm, re.M).group(1)
-            if '"' in plain or plain[:1] in ("|", ">", "[", "{", "'", "&", "*") or plain.endswith(":"):
+            block_list = not plain and re.search(r"^source_verification:[ \t]*\n[ \t]", fm, re.M)
+            if block_list or '"' in plain or plain[:1] in ("|", ">", "[", "{", "'", "&", "*") or plain.endswith(":"):
                 raise SealError("source_verification is not a plain or double-quoted single line: %s" % work)
             value = (plain + " " if plain else "") + " ".join(parts)
             fm = re.sub(r"^source_verification:[^\n]*$", lambda mm: 'source_verification: "%s"' % value, fm,

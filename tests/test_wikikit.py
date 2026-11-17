@@ -82,6 +82,15 @@ class GateTests(unittest.TestCase):
                 got = synthesis.validate(text, block, FIX, cfg, sources)
                 self.assertEqual(got["RESULT"], want, got)
 
+    def test_v1_flags_a_cited_work_that_has_no_note_anywhere(self):
+        cfg = cfg_with_cutoff()
+        text = read_text(FIX / "note_clean.md")
+        block = sections.get_section(text, "State of Knowledge")
+        block = block.replace("]]", "]] [[Invented_2021_Study]]", 1)
+        got = synthesis.validate(text, block, FIX, cfg, synthesis.source_stems(FIX, cfg))
+        self.assertEqual(got["V1"], "FAIL", got)
+        self.assertIn("Invented_2021_Study", got["v1_bad"])
+
     def test_without_cutoff_only_weak_seals_are_prefulltext(self):
         cfg = cfg_with_cutoff(None)
         self.assertFalse(synthesis.is_prefulltext("Pre_2026_CT", FIX, cfg))
@@ -111,6 +120,15 @@ class InsertBlockTests(unittest.TestCase):
         out, _ = synthesis.insert_block(self.NOTE, self.BLOCK, absorbed=2)
         with self.assertRaises(synthesis.SynthError):
             synthesis.insert_block(out, self.BLOCK, absorbed=0)
+
+    def test_controversies_above_the_anchor_is_retitled_without_losing_a_line(self):
+        note = ("---\nstatus: final\n---\n# T\n## Controversies or Gaps\n- gap one\n"
+                "## Definition\nDEF LINE\n## Key Findings\n- KEEP 5 [[P_2020_A]]\n")
+        out, _ = synthesis.insert_block(note, self.BLOCK, absorbed=1, today="2026-11-06")
+        self.assertIn("DEF LINE", out)  # the offset used to overwrite this line with the new heading
+        self.assertIn("- gap one", out)
+        self.assertNotIn("## Controversies or Gaps", out)
+        self.assertEqual(out.count("## Open Questions and Caveats"), 1)
 
     def test_crlf_preserved(self):
         crlf = self.NOTE.replace("\n", "\r\n")
@@ -149,6 +167,13 @@ class SealTests(unittest.TestCase):
         write_text(self.ficha, "---\nstatus: final\nsource_verification: |\n  multi\n---\nbody\n")
         with self.assertRaises(seals.SealError):
             seals.append_seals(self.wiki, self.cfg, [("N_One", "P_2020_A", seals.CLEAN_TEXT)], "2026-11-06", "t")
+
+    def test_block_list_is_refused_and_the_file_untouched(self):
+        listed = "---\nstatus: final\nsource_verification:\n  - fulltext\n  - tables\n---\nbody\n"
+        write_text(self.ficha, listed)
+        with self.assertRaises(seals.SealError):
+            seals.append_seals(self.wiki, self.cfg, [("N_One", "P_2020_A", seals.CLEAN_TEXT)], "2026-11-06", "t")
+        self.assertEqual(read_text(self.ficha), listed)
 
     def test_aborts_without_writing(self):
         before = read_text(self.ficha)
