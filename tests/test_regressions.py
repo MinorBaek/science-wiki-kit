@@ -87,6 +87,17 @@ class LintEntryPoint(unittest.TestCase):
             self.assertFalse((Path(d) / "_temp").exists())
 
 
+class SetKitDir(unittest.TestCase):
+    def test_accepts_a_config_saved_with_a_bom(self):
+        with tempfile.TemporaryDirectory() as d:
+            cfg = Path(d) / "wiki.config.json"
+            cfg.write_bytes(b'\xef\xbb\xbf{\n  "wiki_root": "wiki"\n}\n')  # Windows PowerShell 5.1 Set-Content
+            r = run(ROOT / "tools" / "set_kit_dir.py", cfg, d)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertIn('"kit_dir"', read_text(cfg))
+            self.assertIn('"wiki_root": "wiki"', read_text(cfg))
+
+
 class Checks(Wiki):
     def test_check22_sees_a_paper_name_with_an_accent(self):
         write_text(self.wiki / "papers" / "Muñoz_2020_Hombro.md",

@@ -111,7 +111,8 @@ If the PDF path contains a Unicode hyphen, dash or accent, `pdftotext` may fail 
 `FirstAuthor_Year_Keyword_ChNN.md`
 
 - `NN` is the zero-padded chapter number: `Ch01`, `Ch03`, `Ch12`.
-- If a book uses Parts: `Pt02_Ch05`.
+- If a book uses Parts, keep numbering chapters continuously (`Ch05`, not `Pt02_Ch05`): every tool reads
+  `{book}_ChNN`, and a Parts prefix breaks Checks 6, 8 and 15.
 - Unnumbered chapters get a short slug: `Intro`, `Appendix_A`.
 
 ### Citekey convention

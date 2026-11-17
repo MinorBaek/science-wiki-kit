@@ -2,7 +2,6 @@
 import fnmatch
 import re
 import unicodedata
-from pathlib import Path
 
 from .. import seals as seal_lib
 from ..synthesis import below_fulltext

@@ -29,7 +29,9 @@ When a new paper adds evidence to an existing concept:
    ```
    - [New finding from paper] — [[FirstAuthor_Year_Keyword]]
    ```
-3. If the new paper **contradicts** an existing finding, move the contradiction to **Controversies or Gaps**:
+3. If the new paper **contradicts** an existing finding, move the contradiction to **Controversies or Gaps**
+   (once the note carries a `## State of Knowledge` block, put it in the relevant `contested` or `superseded`
+   entry of the block instead, per `WIKI_SCHEMA.md`; do not recreate the absorbed section):
    ```
    - [Finding A] — [[Paper_A]] vs. [Contradicting finding] — [[New_Paper]]
    ```
@@ -43,7 +45,7 @@ Use `templates/concept.md`. Fill:
 1. **Frontmatter**: `date` = today, `tags` includes the field slug, `aliases` for alternate names (including the second language if your wiki is bilingual), and **`field:`** and **`subfield:`** per the taxonomy in `WIKI_SCHEMA.md`.
 2. **Definition**: 1 to 2 sentence working definition citing the current paper.
 3. **Key Findings**: at least the finding(s) that triggered the note.
-4. **Implications for My Research**: a brief note on why this matters to the user's work.
+4. **Implications**: a brief note on why this matters to the user's work.
 
 Minimum content bar: a concept note without at least one cited finding is not ready. Leave `status: draft` until it cites **N distinct source works** (`min_distinct_sources_for_final`, default 2): independent papers or books, where a book parent note and its chapter notes count as **one** work. Canonical table: `wiki-ingest/SKILL.md`, "Initial status decision".
 

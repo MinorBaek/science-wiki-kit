@@ -21,7 +21,7 @@ def main(argv):
         sys.exit(__doc__)
     cfg = Path(argv[0])
     kit = Path(argv[1] if len(argv) > 1 else Path(__file__).resolve().parent.parent).resolve()
-    text = cfg.read_text(encoding="utf-8")
+    text = cfg.read_text(encoding="utf-8-sig")  # as load_config: a BOM (Windows PowerShell 5.1) is not an error
     json.loads(text)  # refuse to touch a file that is not valid JSON
     value = json.dumps(kit.as_posix())
     if re.search(r'^\s*"kit_dir"\s*:', text, re.M):

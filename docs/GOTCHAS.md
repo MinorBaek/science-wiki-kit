@@ -244,7 +244,8 @@ no per-file check sees it.
 - **`last_verified` is written together with `source_verification`**, including for hand-written partial seals
   and for any source note filled or corrected against the fulltext: filling a source note is a verification. Check 15's
   `stale` reads only `last_verified`; without it a corrected source never re-flags the blocks citing it.
-  `synth_write.py` stamps `last_verified` on the note when it writes the block.
+  `synth_write.py` adds `last_verified` to the note when it writes the block if the note has none; an existing
+  date is left as it is.
 - **Check 15 `stale` is blind to equal dates, permanently** (it compares by day with a strict `>`): a block
   dated the day a work was ingested is not flagged even if it does not incorporate that work. List those notes
   by hand after an ingest.

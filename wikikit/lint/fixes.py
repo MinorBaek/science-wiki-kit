@@ -10,7 +10,6 @@ from pathlib import Path
 from .. import frontmatter
 from ..textio import append_log, detect_eol, read_text, write_text
 from . import checks_structure
-from .context import Context
 from .text import extract_wikilinks, split_lines
 
 _WIKILINK = re.compile(r"\[\[([^\]|#]+?)(?:#[^\]|]+)?(?:\|([^\]]+))?\]\]")

@@ -37,7 +37,7 @@ tests/fixtures/lint/ # synthetic mini-wiki exercising every check + expected_cou
 1. **All file I/O goes through `wikikit.textio`** (byte-level UTF-8, no BOM, line endings never translated). Never use text-mode `open()` with default newline handling: reading and re-writing a CRLF file that way silently converts it.
 2. **Never use a multiline regex with `$` over text that may contain CRLF**: `$` sits between the CR and the LF and splits the pair. Edit by lines (`frontmatter.set_key`, `fixes._insert_backlinks`).
 3. **Configuration is the single source of truth.** When the wiki gains a field, folder, status or exemption, edit `wiki.config.json` (`lint` section), not the code. Defaults live in `wikikit/lint/defaults.json`.
-4. **Stub exemption is uniform.** `lint.stub_exempt_checks` lists the check numbers that skip `status: stub` notes; read the list from the config, never restate it in prose. Checks 10 and 11 exclude stubs inline (filesystem counts).
+4. **Stub exemption is uniform.** `lint.stub_exempt_checks` lists the check numbers that skip `status: stub` notes; read the list from the config, never restate it in prose. Only checks 1, 2, 4, 7, 8, 13, 14, 17, 18, 21, 25, 26 and 33 read the list; Check 3 skips stubs on its own, Check 11 excludes them inline, and Check 10 (Quick Stats) counts every file, stubs included.
 5. **Placeholder detection is gated on non-resolution.** A wikilink target that resolves in the vault index is NEVER flagged as a placeholder, even if its name matches a pattern; legitimate ALL-CAPS abbreviation notes must not flag.
 6. **Self-test before shipping logic changes.** Any edit to a check (new check, changed threshold, refactored heuristic) must run green: `python skills/wiki-lint/scripts/lint.py --self-test`. Update `tests/fixtures/lint/` and `expected_counters.txt` together when the change is intentional. **Prove the fixture discriminates**: revert the logic change, re-run, and confirm the counter moves. A fixture that passes both before and after guards nothing.
 7. **A zero is a measurement of the detector, not of the wiki.** Before trusting a new check's zero, inject a positive case and see it fire.
@@ -104,7 +104,7 @@ Flags, configuration keys and the files each check writes: `references/cli-refer
 - **New field for concepts/methods**: add the slug to `field_titlecase_map`.
 - **Refine Check 4**: `lint.verb_list`. **Loosen/tighten its tolerance**: `lint.defaults.unsourced_radius`.
 - **New placeholder pattern**: `lint.placeholder_wikilink_patterns` (remember it only applies to non-resolving targets).
-- **A check should skip stubs**: add its number to `lint.stub_exempt_checks`.
+- **A check should skip stubs**: add its number to `lint.stub_exempt_checks` (it takes effect only for checks 1, 2, 4, 7, 8, 13, 14, 17, 18, 21, 25, 26 and 33; any other needs a code change).
 - **Turn on the language radar**: copy `examples/languages/es.json` (or write your own lists) into `lint.language_radar`.
 - **Add a new check**: implement it in `wikikit/lint/checks_*.py`, add its counters to `expected_counters.txt`, add a fixture that exercises it, **write its entry in `references/check-origins.md`**. A check whose motive is not written down gets disabled the first time it looks noisy. If the motive cannot be sourced, write "not documented"; never invent one.
 

@@ -8,7 +8,8 @@
 
 Run from the vault (or pass --vault-root): the config is the nearest wiki.config.json upwards.
 The tool is read-only against the wiki; it only writes the per-check lists into --out-dir.
-Exit code: 0 clean run (or self-test passed), 1 self-test failure, 2 usage error.
+Exit code: 0 clean run (or self-test passed), 1 self-test failure, 2 usage error or no wiki.config.json found
+(the lint refuses rather than report an empty tree as clean).
 """
 import argparse
 import sys

@@ -9,7 +9,7 @@ The lint is a read-only health check of the wiki. It never modifies a note; the 
 ## Engineering risks (read once, do not repeat)
 
 - **Line endings and encoding.** Read and write only through `wikikit.textio` (byte-level UTF-8, no BOM, EOL untouched). A text-mode round trip converts CRLF to LF behind your back; a multiline `$` regex over CRLF text splits the CR/LF pair and drops the CR (a bulk edit that way once corrupted over a hundred files without `git status` noticing).
-- **`status: stub` exemption is uniform**, not just one check. The authoritative list is `lint.stub_exempt_checks`; read it there, because a list restated in prose goes stale silently. Checks 10 and 11 also exclude stubs inline.
+- **`status: stub` exemption is uniform**, not just one check. The authoritative list is `lint.stub_exempt_checks`; read it there, because a list restated in prose goes stale silently. Check 11 also excludes stubs inline; Check 10 (Quick Stats) counts every file, stubs included.
 - **Placeholder detection only flags non-resolving targets.** A wikilink that resolves in the vault index is never a placeholder, even if its name matches a pattern. This protects legitimate abbreviation notes (DOMS, ANCOVA, WOMAC...).
 
 ---
@@ -64,7 +64,7 @@ Pre-processing removes lines, so line numbers taken from the pre-processed body 
 
 ## Configuration (`wiki.config.json`)
 
-Top level (shared by every skill): `vault_root`, `wiki_root`, `papers_folder`, `books_folder`, `concepts_folder`, `methods_folder`, `folders`, `recursive_folders`, `vault_ignore_dirs`, `field_titlecase_map`, `vocabulary_file`, `min_distinct_sources_for_final`, and `synthesis` (`min_sources`, `sr_levels`, `prefulltext_cutoff`, `priority_fields`).
+Top level (shared by every skill): `vault_root`, `wiki_root`, `papers_folder`, `books_folder`, `concepts_folder`, `methods_folder`, `folders`, `recursive_folders`, `vault_ignore_dirs`, `field_titlecase_map`, `vocabulary_file`, `min_distinct_sources_for_final`, and `synthesis` (`min_sources`, `sr_levels`, `prefulltext_cutoff`, `priority_fields`). `note_language`, `pdf_library_dir` and `synthesis.priority_fields` are read by the agent from the skills, not by any script: no tool changes behaviour if you set them, and `pdf_library_dir` is empty until you fill it.
 
 `lint` section (overrides the defaults in `wikikit/lint/defaults.json`; lists replace the default list, objects merge):
 
@@ -72,7 +72,7 @@ Top level (shared by every skill): `vault_root`, `wiki_root`, `papers_folder`, `
 |---|---|---|
 | `index_mode` | 7, 7b | `bases` (index embeds Bases views; checks 7 and 7b are skipped) or `manual` (per-note lists). `--self-test` forces `manual`. |
 | `index_sections`, `index_exempt_patterns`, `quick_stats_labels` | 7, 7b, 10 | Heading to folder map; basename regexes exempt from Check 7 (default `^_`); Quick Stats row label to folder. Derived from the folder names when absent. |
-| `stub_exempt_checks` | many | Check numbers that skip `status: stub`. |
+| `stub_exempt_checks` | 1, 2, 4, 7, 8, 13, 14, 17, 18, 21, 25, 26 and 33 | Check numbers that skip `status: stub` (no effect on any other check). |
 | `defaults.stale_days`, `defaults.unsourced_threshold`, `defaults.unsourced_radius` | 4, 6, 25 | Thresholds. |
 | `verb_list` | 4 | Claim verbs. |
 | `placeholder_wikilink_patterns`, `link_target_ignore_patterns` | 5 | Regexes. |

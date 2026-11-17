@@ -52,4 +52,4 @@ Full procedure in `references/SYNTHESIS-WORKFLOW.md`. Summary: read contracts, r
 
 - `references/SYNTHESIS-WORKFLOW.md`: the detailed procedure, the block template, guard logic, re-synthesis handling.
 - `references/BATCH-WORKFLOW.md`: batch mode, the orchestrator loop, the subagent brief, the V1-V5 write gate, the escalation triggers.
-- `scripts/synth_validate.py`: the write gate and a whole-wiki sweep. `scripts/synth_write.py`: block insertion. `<kit>/tools/seal.py`: sealing.
+- `scripts/synth_validate.py`: the write gate and a whole-wiki sweep; `--note` without `--block` re-checks the block the note already carries. `scripts/synth_write.py`: block insertion; it runs the same gate and refuses anything but CLEAN. `<kit>/tools/seal.py`: sealing.
