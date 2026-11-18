@@ -31,7 +31,7 @@ Paths come from `wiki.config.json`. Notes: `<wiki_root>/concepts/`, `methods/`, 
 
 ## Workflow
 
-Full procedure in `references/SYNTHESIS-WORKFLOW.md`. Summary: read contracts, resolve the note (exact `test -f`/content search, never a glob alone), threshold gate, pre-fulltext guard, cluster findings into sub-questions, **check new or changed entries against the PDF**, propose the block in chat with quotes and pages, ratify, write (`scripts/synth_write.py`: insert after `## Definition`, absorb Controversies, stamp), **seal the source notes** (`<kit>/tools/seal.py`), re-synthesis diff if a block already exists, then log, re-run the gate and re-run Check 15.
+Full procedure in `references/SYNTHESIS-WORKFLOW.md`. Summary: read contracts, resolve the note (exact `test -f`/content search, never a glob alone), threshold gate, pre-fulltext guard, cluster findings into sub-questions, **check new or changed entries against the PDF**, propose the block in chat with quotes and pages, ratify, write (`scripts/synth_write.py`: insert after `## Definition`, absorb Controversies, stamp), **seal the source notes** (`<kit>/tools/seal.py`), re-synthesis diff and `synth_write.py --replace` if a block already exists, then log, re-run the gate and re-run Check 15.
 
 ## Safety rules
 
@@ -55,4 +55,4 @@ Full procedure in `references/SYNTHESIS-WORKFLOW.md`. Summary: read contracts, r
 - `references/BRIEF-RULES.md`: the drafting rules distilled from past waves; give it with the subagent brief, and read it before drafting a block yourself.
 - `references/CHECK-BRIEF.md`: the brief for the subagent that checks entries against the PDF (step 5b).
 - `references/RESYNTHESIS-BRIEF.md`: the addendum for a note that already has a block (step 9).
-- `scripts/synth_validate.py`: the write gate and a whole-wiki sweep; `--note` without `--block` re-checks the block the note already carries. `scripts/synth_write.py`: block insertion; it runs the same gate and refuses anything but CLEAN. `<kit>/tools/seal.py`: sealing.
+- `scripts/synth_validate.py`: the write gate and a whole-wiki sweep; `--note` without `--block` re-checks the block the note already carries. `scripts/synth_write.py`: block insertion, and `--replace` for re-synthesis; both run the same gate and refuse anything but CLEAN. `<kit>/tools/seal.py`: sealing.

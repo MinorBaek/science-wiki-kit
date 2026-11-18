@@ -11,6 +11,7 @@ already carries. This module holds the two deterministic pieces around it:
                     V5 format               header with `updated <date>`; every bullet has a state glyph
   insert_block()  place a validated block after `## Definition` (or `## Description`) and absorb
                   `## Controversies or Gaps` by RETITLING it, never deleting it.
+  replace_block() swap an existing block for a re-synthesized one (only the block's lines change).
 
 Why absorbing retitles instead of deleting: V2 requires every figure in the block to be anchored in
 the note BODY, and the gate runs before the write, while the section still exists. Deleting the
@@ -237,4 +238,39 @@ def insert_block(raw, block_text, absorbed, today=None, after=None, purge_absorb
 
     report = {"anchor": name, "line": insert_at, "block_lines": len(block), "absorbed": ngaps,
               "action": action, "stamp": stamp, "eol": "CRLF" if eol == "\r\n" else "LF"}
+    return eol.join(out), report
+
+
+_UPDATED = re.compile(r"\[!abstract\][^\n]*updated\s+(\d{4}-\d{2}-\d{2})", re.I)
+
+
+def replace_block(raw, block_text):
+    """Return (new_text, report) with the existing block swapped for `block_text` (re-synthesis).
+
+    Only the lines of the old block change (its heading to the next `## `; the blank lines before
+    that heading stay). Raises SynthError when the note has no block, when the new block does not
+    open with the block heading, or when its `updated` date is earlier than the old one: Check 15
+    would keep the note in `stale`. The report carries both blocks as line lists for a diff.
+    """
+    eol = "\r\n" if "\r\n" in raw else "\n"
+    lines = raw.split(eol)
+    bounds = sections.section_bounds(lines, BLOCK_HEADING)
+    if not bounds:
+        raise SynthError("the note has no `## %s` block: use plain mode (insertion), not --replace" % BLOCK_HEADING)
+    start, end = bounds
+    while end > start + 1 and not lines[end - 1].strip():
+        end -= 1
+    old = lines[start:end]
+
+    block = block_text.replace("\r\n", "\n").strip("\n").split("\n")
+    if not re.match(r"^##\s+%s\s*$" % re.escape(BLOCK_HEADING), block[0]):
+        raise SynthError("the new block must open with `## %s`" % BLOCK_HEADING)
+    old_m, new_m = _UPDATED.search("\n".join(old)), _UPDATED.search("\n".join(block))
+    old_date, new_date = old_m and old_m.group(1), new_m and new_m.group(1)
+    if old_date and new_date and new_date < old_date:
+        raise SynthError("the new block says `updated %s`, earlier than the current %s" % (new_date, old_date))
+
+    out = lines[:start] + block + lines[end:]
+    report = {"line": start, "old": old, "new": block, "old_date": old_date, "new_date": new_date,
+              "eol": "CRLF" if eol == "\r\n" else "LF"}
     return eol.join(out), report

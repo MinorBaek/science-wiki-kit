@@ -137,6 +137,41 @@ class InsertBlockTests(unittest.TestCase):
         self.assertEqual(out.count("\n"), out.count("\r\n"))
 
 
+class ReplaceBlockTests(unittest.TestCase):
+    NOTE = InsertBlockTests.NOTE
+    BLOCK = InsertBlockTests.BLOCK
+    NEW = BLOCK.replace("2026-11-06", "2026-11-18").replace("**Q**", "**Q, revised**")
+
+    def written(self, eol="\n"):
+        out, _ = synthesis.insert_block(self.NOTE, self.BLOCK, absorbed=2, today="2026-11-06")
+        return out.replace("\n", eol)
+
+    def test_only_block_lines_change_and_crlf_is_kept(self):
+        before = self.written("\r\n")
+        out, rep = synthesis.replace_block(before, self.NEW)
+        self.assertEqual(rep["eol"], "CRLF")
+        self.assertEqual(out.count("\n"), out.count("\r\n"))
+        b, a = before.split("\r\n"), out.split("\r\n")
+        self.assertEqual(len(b), len(a))  # same block length here, so a line-by-line comparison is exact
+        changed = [i for i, (x, y) in enumerate(zip(b, a)) if x != y]
+        s = b.index("## State of Knowledge")
+        self.assertTrue(changed and all(s < i < s + len(rep["old"]) for i in changed), changed)
+        self.assertIn("**Q, revised**", out)
+        self.assertEqual((rep["old_date"], rep["new_date"]), ("2026-11-06", "2026-11-18"))
+
+    def test_refuses_a_note_without_a_block(self):
+        with self.assertRaises(synthesis.SynthError):
+            synthesis.replace_block(self.NOTE, self.NEW)
+
+    def test_refuses_an_earlier_updated_date(self):
+        with self.assertRaises(synthesis.SynthError):
+            synthesis.replace_block(self.written(), self.BLOCK.replace("2026-11-06", "2026-11-01"))
+
+    def test_refuses_a_block_without_its_heading(self):
+        with self.assertRaises(synthesis.SynthError):
+            synthesis.replace_block(self.written(), self.NEW.split("\n", 1)[1])
+
+
 class SealTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()

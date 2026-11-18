@@ -69,6 +69,36 @@ class SynthScripts(Wiki):
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
         self.assertIn("## State of Knowledge", read_text(self.note))
 
+    def test_replace_writes_a_clean_block_and_refuses_a_dirty_one(self):
+        with_block = NOTE.replace("## Key Findings", (BLOCK % "12") + "\n## Key Findings")
+        write_text(self.note, with_block)
+        blk = self.root / "b.md"
+        write_text(blk, (BLOCK % "99").replace("2026-11-17", "2026-11-18"))  # 99 is not in the note
+        args = (SYNTH / "synth_write.py", "--vault-root", self.root, "--note", "concepts/X_Concept",
+                "--block", blk, "--replace")
+        r = run(*args)
+        self.assertNotEqual(r.returncode, 0, r.stdout)
+        self.assertIn("V2", r.stdout + r.stderr)
+        self.assertEqual(read_text(self.note), with_block)
+        write_text(blk, (BLOCK % "12").replace("2026-11-17", "2026-11-18").replace("resolved", "settled"))
+        r = run(*args, "--dry-run")
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("+> - ✅ **Q - settled.**", r.stdout)
+        self.assertEqual(read_text(self.note), with_block)
+        r = run(*args)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn("updated 2026-11-18", read_text(self.note))
+        self.assertEqual(read_text(self.note).count("## State of Knowledge"), 1)
+
+    def test_replace_refuses_a_note_without_a_block(self):
+        blk = self.root / "b.md"
+        write_text(blk, BLOCK % "12")
+        r = run(SYNTH / "synth_write.py", "--vault-root", self.root, "--note", "concepts/X_Concept",
+                "--block", blk, "--replace")
+        self.assertNotEqual(r.returncode, 0, r.stdout)
+        self.assertIn("no `## State of Knowledge` block", r.stdout + r.stderr)
+        self.assertEqual(read_text(self.note), NOTE)
+
     def test_validate_rechecks_a_note_that_already_has_its_block(self):
         write_text(self.note, NOTE.replace("## Key Findings", (BLOCK % "12") + "\n## Key Findings"))
         r = run(SYNTH / "synth_validate.py", "--vault-root", self.root, "--note", "concepts/X_Concept")
