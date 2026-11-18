@@ -208,7 +208,8 @@ distinct sources or at least one SR/MA of quality.
   An entry that cites nothing writes `(0 src: <reason>; n/a)`.
 - **A qualifier the vocabulary cannot express** (a practice guideline, a consensus statement, a preprint) goes in the
   entry's prose, never in the tally.
-- **Confidence**: `High`, `Moderate`, `Low-moderate` or `Low`, combining design and the inline measurement-quality axis.
+- **Confidence**: `High`, `Moderate–High`, `Moderate`, `Low–moderate` or `Low` (the two hybrids exactly so, with an
+  en dash), combining design and the inline measurement-quality axis.
 - **Freshness**: one block-level `updated` date. Check 15 compares it with the sources' `last_verified`.
 - A debate spanning several notes and belonging to an active line is promoted to a `debates/` synthesis note.
 

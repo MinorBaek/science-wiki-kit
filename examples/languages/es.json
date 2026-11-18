@@ -18,7 +18,7 @@
       ],
       "prose_threshold": 8,
       "case_sensitive_tokens": ["con"],
-      "line_guards": {},
+      "line_guards": {"con": "(?i)(?<![A-Za-z])ecc(?![A-Za-z])"},
       "heading_requires_accent": ["conclusion"]
     }
   }

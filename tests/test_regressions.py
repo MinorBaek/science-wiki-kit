@@ -1,4 +1,6 @@
 """Regressions from the 2026-11 audit: script entry points and lint checks on small synthetic wikis."""
+import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -9,7 +11,8 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from wikikit.config import load_config  # noqa: E402
-from wikikit.lint import checks_integrity, checks_structure  # noqa: E402
+from wikikit import synthesis  # noqa: E402
+from wikikit.lint import checks_content, checks_integrity, checks_structure  # noqa: E402
 from wikikit.lint.context import Context  # noqa: E402
 from wikikit.textio import read_text, write_text  # noqa: E402
 
@@ -114,6 +117,48 @@ class Checks(Wiki):
         write_text(self.wiki / "index.md", index)
         out = checks_structure.check11(self.ctx()).files["wiki_check11_coverage.txt"]
         self.assertEqual(out, [])
+
+
+class AdoptionAuditFixes(Wiki):
+    """Defects found while migrating a large existing wiki onto the kit (2026-11-18)."""
+
+    def test_es_example_guards_con_next_to_ecc(self):
+        # "knee ext con 2.68 / ecc 3.92": concentric/eccentric abbreviations, not the Spanish preposition
+        lint = json.loads(read_text(ROOT / "examples" / "languages" / "es.json"))["lint"]
+        write_text(self.root / "wiki.config.json", json.dumps({"lint": lint}))
+        write_text(self.note, NOTE + "".join("- knee ext con 2.%d / ecc 3.9 Nm/kg\n" % i for i in range(10)))
+        self.assertEqual(checks_content.check14(self.ctx()).counters["check14"], 0)
+        write_text(self.note, NOTE + "".join("- knee ext con 2.%d Nm/kg\n" % i for i in range(10)))
+        self.assertEqual(checks_content.check14(self.ctx()).counters["check14"], 1)  # the radar still bites
+
+    def test_spanish_heading_lists_hold_no_english_heading(self):
+        english = {"methods", "results", "discussion", "introduction", "references", "summary"}
+        for path in (ROOT / "examples" / "languages" / "es.json",
+                     ROOT / "tests" / "fixtures" / "lint" / "vault" / "wiki.config.json"):
+            with self.subTest(path.name):
+                headings = set(json.loads(read_text(path))["lint"]["language_radar"]["headings"])
+                self.assertEqual(headings & english, set())
+
+    def test_confidence_levels_agree_across_the_docs(self):
+        def labels(path, marker):
+            line = next(ln for ln in read_text(path).splitlines() if marker in ln)
+            return [x for x in re.findall(r"`([^`]+)`", line) if re.match(r"(High|Moderate|Low)\b", x)]
+        schema = labels(ROOT / "docs" / "WIKI_SCHEMA.md", "**Confidence**")
+        workflow = labels(ROOT / "skills" / "wiki-synthesize" / "references" / "SYNTHESIS-WORKFLOW.md",
+                          "**Confidence:**")
+        self.assertEqual(schema, workflow)
+        self.assertEqual(len(workflow), 5)
+
+    def test_a_seal_starting_with_abstract_is_below_fulltext(self):
+        # Check 17 already treats any value starting with "abstract" as no seal; Check 21 and V4 must agree.
+        self.assertTrue(synthesis.below_fulltext("abstract only (no PDF found)"))
+        self.assertTrue(synthesis.below_fulltext("abstract"))
+        self.assertFalse(synthesis.below_fulltext("[2026-11-18, T, X] Checked against PDF: abstract and tables"))
+        write_text(self.root / "wiki.config.json", '{"synthesis": {"prefulltext_cutoff": "2026-06-01"}}')
+        write_text(self.wiki / "papers" / "Old_2001_Abs.md", '---\ntype: paper\nstatus: read\ndate: 2026-01-10\n'
+                   'source_verification: "abstract only (no PDF found)"\n---\n# p\n')
+        out = checks_content.check21(self.ctx()).files["wiki_check21_prefulltext_cohort.txt"]
+        self.assertEqual(out, ["Old_2001_Abs"])
 
 
 if __name__ == "__main__":

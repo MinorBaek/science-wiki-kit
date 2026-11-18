@@ -33,7 +33,9 @@ GLYPHS = ("✅", "⚖", "🚫", "🌱")
 # upgrade marker", never the phrase alone. Spanish forms are accepted for wikis that wrote them.
 _BELOW = re.compile(r"abstract-level|abstract level|partial fulltext|NIVEL DE ABSTRACT|fulltext PARCIAL", re.I)
 _UPGRADED = re.compile(r"UPGRADED TO FULLTEXT|AMPLIADO A FULLTEXT", re.I)
-_BARE_ABSTRACT = re.compile(r"^abstract$", re.I)
+# A value that STARTS with "abstract" ("abstract", "abstract only, no PDF") is not a fulltext seal: Check 17
+# reads it the same way, and the two must not disagree on which papers are verified.
+_BARE_ABSTRACT = re.compile(r"^abstract\b", re.I)
 
 
 class SynthError(Exception):
@@ -76,9 +78,9 @@ def _raw_value(text, key):
 
 def below_fulltext(seal):
     """True when a `source_verification` value is a seal BELOW fulltext level."""
-    if _BARE_ABSTRACT.match(seal):
-        return True
-    return bool(_BELOW.search(seal)) and not _UPGRADED.search(seal)
+    if _UPGRADED.search(seal):  # an upgraded seal keeps its abstract-level sentence; the marker decides
+        return False
+    return bool(_BARE_ABSTRACT.match(seal) or _BELOW.search(seal))
 
 
 def is_prefulltext(name, wiki, cfg):
