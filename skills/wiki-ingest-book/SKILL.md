@@ -125,7 +125,7 @@ A book's TOC lists **book** page numbers; `pdftotext -f/-l` addresses **PDF** pa
 9. **Forward-ref stubs (automatic)**: after the chapter body is written, materialise any forward-references to sibling chapters that do not exist yet:
 
    ```
-   python skills/wiki-ingest-book/scripts/create_forward_ref_stubs.py \
+   python <kit>/skills/wiki-ingest-book/scripts/create_forward_ref_stubs.py \
      <wiki_root>/books/{book}_Ch{NN}.md  <wiki_root>/books/{book}.md   [--dry-run]
    ```
 
@@ -136,7 +136,7 @@ A book's TOC lists **book** page numbers; `pdftotext -f/-l` addresses **PDF** pa
 10. **Missing-concept report (automatic)**: after the stubs, scan the chapter for concept-shaped wikilinks that do not resolve:
 
     ```
-    python skills/wiki-ingest-book/scripts/report_missing_concepts.py \
+    python <kit>/skills/wiki-ingest-book/scripts/report_missing_concepts.py \
       <wiki_root>/books/{book}_Ch{NN}.md
     ```
 
@@ -145,7 +145,7 @@ A book's TOC lists **book** page numbers; `pdftotext -f/-l` addresses **PDF** pa
 11. **Closeout**: four edits, then verify, then report.
    - **Book note** (`books/{book}.md`): append the chapter number to `chapters_ingested:`; add its concepts to `concepts_touched`; flip the TOC row from `pending` to `ingested` with a link to the chapter note. **After writing, list the `{book}_Ch*.md` files that are not `status: stub` and confirm the set matches `chapters_ingested:`**; emit `OK chapters_ingested in sync` or fail loudly (Check 8 contract).
    - **`index.md`**: with Bases views, do NOT insert chapter bullets, book summaries or one-liners; only bump the `## Quick Stats` counts and the relevant `## Coverage by Field` rows for new concept or method notes, then re-read the tables. In `manual` mode, add the entries.
-   - **`fields/MOC_{FieldName}.md`**: add new notes to their subfield sections.
+   - **Sub-MOC**: add new notes to the sub-MOC of their `field` + `subfield` (path from `python <kit>/tools/wiki_paths.py moc {field} {subfield}`), never to the field MOC; routing as in `wiki-ingest` step 9.
    - **`log.md`**: append `## [YYYY-MM-DD] ingest-book | {Book Title} > Ch. N: {Chapter Title}` with bullets for created and updated files.
    - **Final verification**: re-read the chapter frontmatter and confirm `book: "[[{parent}]]"` resolves (Check 9). Re-read the parent frontmatter and confirm the chapter is in `chapters_ingested:` (Check 8). Both pass, or the ingest is incomplete.
    - **Report**: chapter note path, concepts and methods created or updated, evidence table (rows checked, reworded, dropped), seals written, and the verification status of Checks 8 and 9.

@@ -128,7 +128,7 @@ def validate(note_text, block, wiki, cfg, sources):
     note_folders = cfg.get("folders") or [cfg[k] for k in ("papers_folder", "books_folder", "concepts_folder",
                                                             "methods_folder")]
     v1_bad = [s for s in block_links if s not in body_links
-              and (s in sources or vault.find_note(wiki, note_folders, s) is None)]
+              and (s in sources or vault.find_note(wiki, note_folders, s, cfg.get("recursive_folders", ())) is None)]
     body_nums = set(numbers(body))
     v2_bad = [n for n in numbers(block, is_block=True) if n not in body_nums]
     v3_bad = [l for l in vault.links(contr) if l not in set(block_links)]

@@ -39,7 +39,7 @@ except ImportError:  # running from a checkout without `pip install -e .`
         sys.exit("wikikit not found: run `pip install -e <kit>` or keep the skills inside the kit checkout")
 
 from wikikit import frontmatter  # noqa: E402
-from wikikit.config import load_config, wiki_path  # noqa: E402
+from wikikit.config import require_config, wiki_path  # noqa: E402
 
 
 def norm(s):
@@ -141,7 +141,7 @@ def main():
     ap.add_argument("--dupes", help="duplicate report (default: <wiki_root>/_lint/vocabulary_dupes.txt)")
     a = ap.parse_args()
 
-    root, cfg = load_config(a.vault_root)
+    root, cfg = require_config(a.vault_root)
     wiki = wiki_path(root, cfg)
     if not wiki.is_dir():
         sys.exit(f"Wiki folder not found: {wiki} (set wiki_root in wiki.config.json)")

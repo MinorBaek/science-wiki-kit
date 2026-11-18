@@ -34,7 +34,7 @@ except ImportError:  # running from a checkout without `pip install -e .`
         sys.exit("wikikit not found: run `pip install -e <kit>` or keep the tools inside the kit checkout")
 
 from wikikit import seals  # noqa: E402
-from wikikit.config import load_config, wiki_path  # noqa: E402
+from wikikit.config import require_config, wiki_path  # noqa: E402
 
 
 def main():
@@ -44,8 +44,8 @@ def main():
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
 
+    root, cfg = require_config(a.vault_root)
     spec = json.loads(Path(a.spec).read_bytes().decode("utf-8-sig"))
-    root, cfg = load_config(a.vault_root)
     wiki = wiki_path(root, cfg)
     try:
         done = seals.append_seals(wiki, cfg, [tuple(s) for s in spec["seals"]], spec["date"], spec["tag"],

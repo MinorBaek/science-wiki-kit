@@ -27,7 +27,7 @@ except ImportError:  # running from a checkout without `pip install -e .`
         sys.exit("wikikit not found: run `pip install -e <kit>` or keep the skills inside the kit checkout")
 
 from wikikit import frontmatter, vault  # noqa: E402
-from wikikit.config import load_config, vault_path  # noqa: E402
+from wikikit.config import require_config, vault_path  # noqa: E402
 from wikikit.textio import append_log, read_text  # noqa: E402
 
 SKIP_CHAPTER = re.compile(r"_Ch\d+$")
@@ -42,9 +42,9 @@ def main():
     a = ap.parse_args()
 
     chapter = Path(a.chapter)
+    root, cfg = require_config(a.vault_root or chapter.parent)
     if not chapter.is_file():
         sys.exit(f"Chapter file not found: {chapter}")
-    root, cfg = load_config(a.vault_root or chapter.parent)
     known = vault.note_basenames(vault_path(root, cfg), cfg["vault_ignore_dirs"])
 
     _, body = frontmatter.parse(read_text(chapter))

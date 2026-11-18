@@ -35,14 +35,19 @@ def stems(folder):
     return {p.stem for p in f.glob("*.md")} if f.is_dir() else set()
 
 
-def find_note(wiki, folders, stem):
-    """Path of `<wiki>/<folder>/<stem>.md` for the first folder that has it, else None.
+def find_note(wiki, folders, stem, recursive=()):
+    """Path of `<wiki>/<folder>/<stem>.md` for the first folder that has it, else None. A folder named in
+    `recursive` (the config's `recursive_folders`, e.g. `fields`) is searched in its subfolders too.
 
-    Uses an exact `is_file` probe, never a glob: file-glob tools have returned false negatives
-    for notes that exist.
+    Uses an exact `is_file` probe in each directory, never a file glob: file-glob tools have returned false
+    negatives for notes that exist.
     """
+    deep = {r.lower() for r in recursive}
     for f in folders:
-        p = Path(wiki) / f / (stem + ".md")
-        if p.is_file():
-            return p
+        base = Path(wiki) / f
+        dirs = [base] + (sorted(d for d in base.rglob("*") if d.is_dir()) if f.lower() in deep and base.is_dir() else [])
+        for d in dirs:
+            p = d / (stem + ".md")
+            if p.is_file():
+                return p
     return None

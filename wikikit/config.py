@@ -1,5 +1,6 @@
 """Locate and load wiki.config.json (the single configuration file of the kit)."""
 import json
+import sys
 from pathlib import Path
 
 DEFAULTS = {
@@ -23,6 +24,10 @@ DEFAULTS = {
     "vocabulary_file": "_VOCABULARY.md",
     "wiki_title": "Science Wiki",
     "field_titlecase_map": {},
+    # names an existing wiki may already use (see wikikit/layout.py): the rule applies when no entry matches
+    "templates_dir": "templates",  # relative to the vault root
+    "template_names": {},  # kind (paper, concept, method, book, chapter, moc, submoc) -> file name
+    "moc_names": {},  # "field-slug" or "field-slug/subfield-slug" -> MOC file stem
     # synthesis layer
     "synthesis": {
         "min_sources": 3,
@@ -76,6 +81,16 @@ def load_config(start="."):
         return Path(start).resolve(), _derive(_merge(DEFAULTS, {}), {})
     user = json.loads(f.read_bytes().decode("utf-8-sig"))
     return f.parent, _derive(_merge(DEFAULTS, user), user)
+
+
+def require_config(start="."):
+    """load_config for the command-line tools: without a wiki.config.json, exit 2. The defaults point at an
+    empty `wiki/` tree, so carrying on would report it clean or write into it."""
+    if find_config_file(start) is None:
+        sys.stderr.write("no wiki.config.json in %s or above: run from the wiki folder or pass --vault-root\n"
+                         % Path(start).resolve())
+        sys.exit(2)
+    return load_config(start)
 
 
 def vault_path(root, cfg):

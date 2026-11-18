@@ -17,8 +17,8 @@ The lint is a read-only health check of the wiki. It never modifies a note; the 
 ## Command line
 
 ```bash
-python skills/wiki-lint/scripts/lint.py [--vault-root DIR] [--only N[,N...]] [--out-dir DIR] [--self-test]
-python skills/wiki-lint/scripts/fix.py  [--vault-root DIR] [--out-dir DIR] {index|check12|promote} ...
+python <kit>/skills/wiki-lint/scripts/lint.py [--vault-root DIR] [--only N[,N...]] [--out-dir DIR] [--json FILE] [--self-test]
+python <kit>/skills/wiki-lint/scripts/fix.py  [--vault-root DIR] [--out-dir DIR] {index|check12|promote} ...
 ```
 
 | Flag | Default | Meaning |
@@ -26,6 +26,7 @@ python skills/wiki-lint/scripts/fix.py  [--vault-root DIR] [--out-dir DIR] {inde
 | `--vault-root DIR` | `.` | Where to look for `wiki.config.json` (it is searched upwards from here). |
 | `--only N[,N...]` | all | Run only these check numbers (7 also runs 7b). Example: `--only 3,5,12`. |
 | `--out-dir DIR` | `_temp` | Where the per-check lists are written. |
+| `--json FILE` | off | Also write the counters as one JSON object (`{"check5": 0, ...}`). Scripts read this, never the printed lines, whose labels change. |
 | `--self-test` | off | Run against `tests/fixtures/lint/` and compare every counter with `expected_counters.txt`. Exit 1 on any mismatch. |
 
 Thresholds are configuration, not flags: `lint.defaults.stale_days` (Check 6, default 90), `min_distinct_sources_for_final` (Check 6 promote, default 2), `lint.defaults.unsourced_threshold` (Check 4, default 3) and `lint.defaults.unsourced_radius` (Checks 4 and 25, default 2).
@@ -64,7 +65,7 @@ Pre-processing removes lines, so line numbers taken from the pre-processed body 
 
 ## Configuration (`wiki.config.json`)
 
-Top level (shared by every skill): `vault_root`, `wiki_root`, `papers_folder`, `books_folder`, `concepts_folder`, `methods_folder`, `folders`, `recursive_folders`, `vault_ignore_dirs`, `field_titlecase_map`, `vocabulary_file`, `min_distinct_sources_for_final`, and `synthesis` (`min_sources`, `sr_levels`, `prefulltext_cutoff`, `priority_fields`). `note_language`, `pdf_library_dir` and `synthesis.priority_fields` are read by the agent from the skills, not by any script: no tool changes behaviour if you set them, and `pdf_library_dir` is empty until you fill it.
+Top level (shared by every skill): `vault_root`, `wiki_root`, `papers_folder`, `books_folder`, `concepts_folder`, `methods_folder`, `folders`, `recursive_folders`, `vault_ignore_dirs`, `field_titlecase_map`, `vocabulary_file`, `min_distinct_sources_for_final`, `templates_dir`, `template_names`, `moc_names` (names an existing wiki already uses, resolved by `<kit>/tools/wiki_paths.py`), and `synthesis` (`min_sources`, `sr_levels`, `prefulltext_cutoff`, `priority_fields`). `note_language`, `pdf_library_dir` and `synthesis.priority_fields` are read by the agent from the skills, not by any script: no tool changes behaviour if you set them, and `pdf_library_dir` is empty until you fill it.
 
 `lint` section (overrides the defaults in `wikikit/lint/defaults.json`; lists replace the default list, objects merge):
 

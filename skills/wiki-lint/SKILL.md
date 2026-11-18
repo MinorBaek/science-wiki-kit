@@ -39,7 +39,7 @@ tests/fixtures/lint/ # synthetic mini-wiki exercising every check + expected_cou
 3. **Configuration is the single source of truth.** When the wiki gains a field, folder, status or exemption, edit `wiki.config.json` (`lint` section), not the code. Defaults live in `wikikit/lint/defaults.json`.
 4. **Stub exemption is uniform.** `lint.stub_exempt_checks` lists the check numbers that skip `status: stub` notes; read the list from the config, never restate it in prose. Only checks 1, 2, 4, 7, 8, 13, 14, 17, 18, 21, 25, 26 and 33 read the list; Check 3 skips stubs on its own, Check 11 excludes them inline, and Check 10 (Quick Stats) counts every file, stubs included.
 5. **Placeholder detection is gated on non-resolution.** A wikilink target that resolves in the vault index is NEVER flagged as a placeholder, even if its name matches a pattern; legitimate ALL-CAPS abbreviation notes must not flag.
-6. **Self-test before shipping logic changes.** Any edit to a check (new check, changed threshold, refactored heuristic) must run green: `python skills/wiki-lint/scripts/lint.py --self-test`. Update `tests/fixtures/lint/` and `expected_counters.txt` together when the change is intentional. **Prove the fixture discriminates**: revert the logic change, re-run, and confirm the counter moves. A fixture that passes both before and after guards nothing.
+6. **Self-test before shipping logic changes.** Any edit to a check (new check, changed threshold, refactored heuristic) must run green: `python <kit>/skills/wiki-lint/scripts/lint.py --self-test`. Update `tests/fixtures/lint/` and `expected_counters.txt` together when the change is intentional. **Prove the fixture discriminates**: revert the logic change, re-run, and confirm the counter moves. A fixture that passes both before and after guards nothing.
 7. **A zero is a measurement of the detector, not of the wiki.** Before trusting a new check's zero, inject a positive case and see it fire.
 8. **Warning-marker ownership is positional, never regex-chained (Check 22).** The wiki may use both `[[Paper]]⚠` and `⚠[[Paper]]`. The owner of a glyph is the link immediately to its LEFT if the left-trimmed text ends in `]]`, otherwise the link to its RIGHT; a glyph adjacent to no link is a prose caution. Do not resolve this with two chained regexes (the second eats the neighbouring link's marker and silently de-flags an unverified source). Any bulk edit of markers needs a per-citekey census before and after.
 
@@ -87,12 +87,12 @@ tests/fixtures/lint/ # synthetic mini-wiki exercising every check + expected_cou
 From the vault (the nearest `wiki.config.json` upwards is the config):
 
 ```bash
-python skills/wiki-lint/scripts/lint.py                 # all checks; lists go to _temp/
-python skills/wiki-lint/scripts/lint.py --only 5,12     # selected checks
-python skills/wiki-lint/scripts/lint.py --self-test     # fixtures vs expected_counters.txt
-python skills/wiki-lint/scripts/fix.py check12 --dry-run
-python skills/wiki-lint/scripts/fix.py promote _temp/promote_batch.txt
-python skills/wiki-lint/scripts/fix.py index            # needs index_mode "manual" and a prior lint run
+python <kit>/skills/wiki-lint/scripts/lint.py                 # all checks; lists go to _temp/
+python <kit>/skills/wiki-lint/scripts/lint.py --only 5,12     # selected checks
+python <kit>/skills/wiki-lint/scripts/lint.py --self-test     # fixtures vs expected_counters.txt
+python <kit>/skills/wiki-lint/scripts/fix.py check12 --dry-run
+python <kit>/skills/wiki-lint/scripts/fix.py promote _temp/promote_batch.txt
+python <kit>/skills/wiki-lint/scripts/fix.py index            # needs index_mode "manual" and a prior lint run
 ```
 
 Flags, configuration keys and the files each check writes: `references/cli-reference.md`.

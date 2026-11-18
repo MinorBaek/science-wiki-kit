@@ -28,7 +28,7 @@ except ImportError:  # running from a checkout without `pip install -e .`
         sys.exit("wikikit not found: run `pip install -e <kit>` or keep the skills inside the kit checkout")
 
 from wikikit import sections, synthesis  # noqa: E402
-from wikikit.config import load_config, wiki_path  # noqa: E402
+from wikikit.config import require_config, wiki_path  # noqa: E402
 from wikikit.textio import read_text  # noqa: E402
 
 
@@ -56,7 +56,7 @@ def main():
     ap.add_argument("--sweep", action="store_true", help="validate every existing block in the wiki")
     a = ap.parse_args()
 
-    root, cfg = load_config(a.vault_root)
+    root, cfg = require_config(a.vault_root)
     wiki = wiki_path(root, cfg)
     sources = synthesis.source_stems(wiki, cfg)
 

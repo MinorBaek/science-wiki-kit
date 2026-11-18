@@ -5,6 +5,7 @@
   python lint.py --only 1,5            # only these checks
   python lint.py --out-dir lint_out    # where the per-check .txt lists are written
   python lint.py --self-test           # run against the kit's fixtures and compare the counters
+  python lint.py --json counters.json  # also write the counters as JSON (for scripts; never parse the text)
 
 Run from the vault (or pass --vault-root): the config is the nearest wiki.config.json upwards.
 The tool is read-only against the wiki; it only writes the per-check lists into --out-dir.
@@ -12,6 +13,7 @@ Exit code: 0 clean run (or self-test passed), 1 self-test failure, 2 usage error
 (the lint refuses rather than report an empty tree as clean).
 """
 import argparse
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -26,7 +28,8 @@ except ImportError:  # running from a checkout without `pip install -e .`
     else:
         sys.exit("wikikit not found: run `pip install -e <kit>` or keep the skills inside the kit checkout")
 
-from wikikit.config import find_config_file, load_config, wiki_path  # noqa: E402
+from wikikit.config import require_config, wiki_path  # noqa: E402
+from wikikit.textio import write_text  # noqa: E402
 from wikikit.lint import engine  # noqa: E402
 from wikikit.lint.context import Context  # noqa: E402
 
@@ -44,6 +47,7 @@ def main():
     ap.add_argument("--vault-root", default=".")
     ap.add_argument("--only", help="comma-separated check numbers, e.g. 1,5,12")
     ap.add_argument("--out-dir", default=None, help="default: _temp (a throwaway folder for --self-test)")
+    ap.add_argument("--json", help="also write the counters as a JSON object to this file")
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
 
@@ -64,17 +68,15 @@ def main():
         return 1 if failures else 0
 
     # Without a config the defaults point at an empty tree and every counter reads 0: a false "clean".
-    if find_config_file(a.vault_root) is None:
-        print("no wiki.config.json in %s or above: run from the wiki folder or pass --vault-root"
-              % Path(a.vault_root).resolve(), file=sys.stderr)
-        return 2
-    root, cfg = load_config(a.vault_root)
+    root, cfg = require_config(a.vault_root)
     if not wiki_path(root, cfg).is_dir():
         print("wiki folder not found: %s (check wiki_root in wiki.config.json)" % wiki_path(root, cfg), file=sys.stderr)
         return 2
     ctx = Context(root, cfg)
     print("Loaded wiki notes: %d" % len(ctx.notes))
-    engine.run(ctx, only=only, out_dir=a.out_dir or "_temp")
+    counters = engine.run(ctx, only=only, out_dir=a.out_dir or "_temp")
+    if a.json:  # for scripts: parsing the printed lines breaks whenever a label changes
+        write_text(Path(a.json), json.dumps(counters, indent=1, sort_keys=True) + "\n")
     return 0
 
 
