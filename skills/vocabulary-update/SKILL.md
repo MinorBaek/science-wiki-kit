@@ -24,7 +24,7 @@ Run from the vault root (or pass `--vault-root`).
 
 1. **Regenerate:**
    ```bash
-   python skills/vocabulary-update/scripts/build_vocabulary.py
+   python <kit>/skills/vocabulary-update/scripts/build_vocabulary.py
    ```
    The summary prints the entry count and entries per field.
 2. **Show what changed** (present to the user; do not auto-commit):

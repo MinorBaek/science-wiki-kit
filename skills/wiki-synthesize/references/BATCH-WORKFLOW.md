@@ -12,8 +12,8 @@ Extends the one-note interactive workflow. **Same synthesis contract** (`SYNTHES
 1. **Worklist.** Run `wiki-lint` Check 15 and take `check15_missing`, ordered by priority: fields in `synthesis.priority_fields` first, then by source-work count, descending.
 2. **Form a wave** of at most 8 notes. Dispatch in parallel sub-batches of about 4 subagents, one note each, with the SUBAGENT BRIEF below.
 3. **Gate and write** per returned note:
-   a. Write the returned block to a temp file and run `python skills/wiki-synthesize/scripts/synth_validate.py --note concepts/<Name> --block <tmp>`.
-   a2. **Evidence check (layer 2):** `SYNTHESIS-WORKFLOW.md` steps 5b and 5c on every entry of the block, with a checking subagent per sub-batch once the user has OK'd it. The drafting subagent does not check its own block. Every defect is re-read in the PDF.
+   a. Write the returned block to a temp file and run `python <kit>/skills/wiki-synthesize/scripts/synth_validate.py --note concepts/<Name> --block <tmp>`.
+   a2. **Evidence check (layer 2):** `SYNTHESIS-WORKFLOW.md` steps 5b and 5c on every entry of the block, with a checking subagent per sub-batch once the user has OK'd it (brief: `CHECK-BRIEF.md`). The drafting subagent does not check its own block. Every defect is re-read in the PDF.
    b. If `RESULT: CLEAN`, the self-report says `escalate: no` **and the check found no defect**: **WRITE** with `synth_write.py` (insert after `## Definition`; absorb Controversies after verifying every bullet mapped), seal the source notes (`<kit>/tools/seal.py`), and append `## [YYYY-MM-DD] synthesize | {Note}` to `log.md`.
    c. Otherwise **QUEUE** (do not write): record the note, the failing check (V1 to V5), the escalation trigger (T1 to T4) and/or the confirmed defects, with a one-line reason.
 4. **Post-wave verification.** Run `synth_validate.py --sweep` (the whole wiki, not only this wave's notes) and `wiki-lint`. Confirm the link checks are stable and Check 15 `missing` dropped by the written count. Spot-check one or two written blocks by reading them against their findings store.
@@ -48,6 +48,8 @@ The kit ships the gate and the seal check (`wiki-lint` Check 32). Other cross-fi
 - **A non-canonical heading means `--absorbed 0`, not a rename.** If a note calls the section `## Gaps in Current Evidence`, the writer leaves it alone: write the block, keep the section, note it. Do not rename headings to make the absorber fire.
 
 ## Subagent brief (given verbatim to each drafting subagent)
+
+Give `BRIEF-RULES.md` with it (the drafting rules from past waves and RETURN items 7 and 8); for a note that already has a block (Check 15 `stale`), add `RESYNTHESIS-BRIEF.md`.
 
 > You are synthesizing ONE wiki note's living-synthesis block. Follow `skills/wiki-synthesize/references/SYNTHESIS-WORKFLOW.md` steps 1 to 5 EXACTLY: read `WIKI_SCHEMA.md` (Living-Synthesis Layer); resolve the note with an exact `test -f` or content search (never a glob alone); apply the threshold gate; apply the pre-fulltext guard; cluster the note's FINDINGS STORE (and any `## Controversies or Gaps`) into sub-questions and draft the `## State of Knowledge` block. The findings store is `## Key Findings` in a concept note and the claim-bearing sections in a method note (`## Papers Using This Method`, `## Strengths`, `## Limitations`, `## Typical Parameters`, `## When to Use`). Never assume the heading; read the note's own section list first.
 > RULES: never invent. Every entry traces to an existing claim in that store; no fulltext, no new numbers. (You draft from the store; the evidence check against the PDF is a separate step.) Do NOT touch the findings store. Do NOT write any file. Note path: `<PATH>`.
@@ -99,7 +101,7 @@ Any FAIL means `RESULT: ESCALATE`: the orchestrator queues the note and never wr
 
 Two kinds of blocks never sit behind the gate. **Interactive mode** (propose, ratify, write) does not call the validator unless you run step 7b, so a block written without it has never been checked. And a block that *did* pass at write time can fail later, because the gate compares it with the findings store **as it is now**: a rewritten finding, a corrected figure or a re-verified source can strand a number or a citation that was properly anchored the day it was written.
 
-`python skills/wiki-synthesize/scripts/synth_validate.py --sweep` runs the gate over every block in `concepts/` and `methods/` and lists the failing ones. The failure rate of blocks written before the gate existed is far higher than of those written behind it, and drifts upward over time, so make the sweep a closing step of every wave. Do not treat a zero as permanent: it is a measurement of a moving target.
+`python <kit>/skills/wiki-synthesize/scripts/synth_validate.py --sweep` runs the gate over every block in `concepts/` and `methods/` and lists the failing ones. The failure rate of blocks written before the gate existed is far higher than of those written behind it, and drifts upward over time, so make the sweep a closing step of every wave. Do not treat a zero as permanent: it is a measurement of a moving target.
 
 ## Fallback
 

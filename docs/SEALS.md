@@ -42,6 +42,23 @@ python <kit>/tools/seal.py seals.json
 
 The tool appends to the end of the existing value (an unquoted single-line value is quoted on the way in), sets `last_verified`, preserves the file's line endings, and **writes nothing at all** if any source note is missing, if its `source_verification` is a block scalar or a list, or if a text contains a double quote.
 
+## Writing a seal the next reader can use
+
+A seal is read later by a triage pass, a checker or a human deciding whether a note is wrong. These habits came from
+seals that misled them:
+
+- **Name the magnitude you corrected and what the source does support.** An ambiguous seal, or one narrower than the
+  source, makes the next triage "correct" what the source does say. Triage applied nearly all proposals that rested
+  on clear seals and under half of those that rested on narrow or ambiguous ones.
+- **A seal that denies needs a positive search; a seal of exclusivity ("only in group X") needs the other groups
+  read.** Test every seal against the abstract, boxes, tables and conclusion, not only the Results. The writer's own
+  seals were found wrong again and again; an independent second reading is what catches them.
+- **Changing an earlier seal needs the full proof.** A seal rewritten from the text alone had to be reverted in
+  several files when the figure backed the old seal. Check doubts about a seal against the PDF before acting on them.
+- **A triage package carries the seal as it was when captured.** If the seal is corrected afterwards, capture it again
+  before applying, or the proposals come from the old seal. Tags repeat across campaigns: find "already sealed" by
+  date and tag together, not by a word in the text.
+
 ## Reading seals (what the checks look for)
 
 `wiki-lint` Check 32 asks one question per pair (note, work cited in the note's `## State of Knowledge` block): does the work's `source_verification` carry a seal naming the note?

@@ -45,7 +45,9 @@ unverified, never written as fact.
 | Sub-MOC | `fields/<field>/` | Map of one subfield | `MOC_Subfield_Name.md` |
 | Synthesis | `debates/` | A debate spanning several notes in an active line | free |
 
-Templates for each type are in `templates/`.
+Templates for each type are in `templates/` (or in `templates_dir`, with the file names in `template_names`, for a wiki
+that already had its own; `<kit>/tools/wiki_paths.py template <kind>` resolves the path). A note keeps the `type:` its
+template writes.
 
 ## Frontmatter Contracts
 
@@ -206,7 +208,8 @@ distinct sources or at least one SR/MA of quality.
   An entry that cites nothing writes `(0 src: <reason>; n/a)`.
 - **A qualifier the vocabulary cannot express** (a practice guideline, a consensus statement, a preprint) goes in the
   entry's prose, never in the tally.
-- **Confidence**: `High`, `Moderate`, `Low-moderate` or `Low`, combining design and the inline measurement-quality axis.
+- **Confidence**: `High`, `Moderate–High`, `Moderate`, `Low–moderate` or `Low` (the two hybrids exactly so, with an
+  en dash), combining design and the inline measurement-quality axis.
 - **Freshness**: one block-level `updated` date. Check 15 compares it with the sources' `last_verified`.
 - A debate spanning several notes and belonging to an active line is promoted to a `debates/` synthesis note.
 
@@ -242,6 +245,10 @@ When a field grows, its map of content is split by subfield, the axis every conc
   spaces turned into underscores and used verbatim (`Strength and Conditioning` gives `MOC_Strength_and_Conditioning.md`;
   do not re-derive it from the slug, `and` and `And` would differ). Template: `templates/moc.md`. Every field MOC is linked
   from the hub `fields/MOC_Wiki.md`, which the installer creates.
+- **Existing names win.** `moc_names` in `wiki.config.json` maps a `field-slug` or `field-slug/subfield-slug` to the
+  MOC stem the wiki already uses (acronyms such as `MOC_ML_Sport`, or a field MOC named before its display title).
+  `<kit>/tools/wiki_paths.py moc <field> [<subfield>]` applies the map and the rules above; use it instead of
+  composing a name by hand, which would create a second MOC next to the real one.
 - If two fields share a sub-MOC basename, disambiguate with a path-prefixed wikilink (`[[field/MOC_X]]`); the lint
   resolver strips the path prefix.
 - `fields/` is enumerated recursively (`recursive_folders`). MOCs and sub-MOCs are exempt from the orphan and

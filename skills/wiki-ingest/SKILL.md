@@ -36,6 +36,8 @@ Paths come from `wiki.config.json` (vault root, wiki root, folder names, languag
 
 `<kit>` below means the science-wiki-kit checkout that holds `tools/` (`seal.py`, `pmc_tables.py`). Its path is the `kit_dir` key of `wiki.config.json`, written by the installer; if it is missing, it is two folders above this skill's directory when the skill is linked from the checkout.
 
+**Templates and names.** `templates/<kind>.md` below is the default; a wiki that already had templates sets `templates_dir` and `template_names` in the config, so take the path from `python <kit>/tools/wiki_paths.py template <kind>` (kinds: paper, concept, method, book, chapter, moc, submoc, synthesis). Keep the `type:` value the template writes (an existing wiki may use its own words, such as `concepto`, and its `lint.status_by_type` matches them): never rewrite it to the kit's `concept`/`method`.
+
 **Always read `WIKI_SCHEMA.md` before starting.** It defines the frontmatter contracts, naming rules and the field taxonomy of this wiki.
 
 ## Related skills
@@ -131,13 +133,15 @@ Only rows that survive go to steps 6 and 7.
 For each concept from step 5:
 1. Check whether `concepts/{Concept_Name}.md` exists.
 2. **Exists**: append the finding with a `[[paper_note]]` backlink under "Key Findings". Update `related_concepts` if new links emerge.
-3. **Does not exist**: apply the creation rules in `references/CONCEPT-PROPAGATION.md` first.
+3. **Does not exist**: apply the creation rules in `references/CONCEPT-PROPAGATION.md` and the homonym check (step 7) first.
 
 ### 7. Propagate to method notes
 For each method from step 5:
 1. Check whether `methods/{Method_Name}.md` exists.
 2. **Exists**: add the paper under "Papers Using This Method".
-3. **Does not exist**: create from `templates/method.md`.
+3. **Does not exist**: run the homonym check below, then create from `templates/method.md`.
+
+**Homonym check (before creating any concept or method note).** Obsidian resolves `[[Name]]` by file stem across the whole vault, so a new note that shares its stem with a note outside the wiki (a project or manuscript note) makes every bare link to either ambiguous. From `<vault_root>`, run `find . -path "./<wiki_root>" -prune -o -iname "{Name}.md" -print` (both values from `wiki.config.json`; use `find`, not a glob tool, which has returned false negatives). On a hit, stop: report the path and propose a distinct name (for example `{Name}_Method`) or path-qualified links, and do not create the note until the user answers.
 
 ### 8. Update paper note frontmatter
 Fill `concepts_touched` with the concept and method notes created or updated.
@@ -151,7 +155,7 @@ Record the verification in the paper note's `source_verification` (one line: ref
 Three edits, then the report. Use `field_titlecase_map` from `wiki.config.json` to find the correct subsection for each new concept or method; never append to a dated catch-all block at the end of a section.
 
 - **`index.md`**: if the index embeds Obsidian Bases views (`index_mode: bases` in the config), do NOT maintain per-note lists; only bump the curated `## Quick Stats` counts and the relevant `## Coverage by Field` row, then re-read the tables (a fresh wiki has neither section: skip this, nothing drifts until you add them). In `manual` mode, add the note to the right alphabetical slot. Never touch a frozen legacy index.
-- **Sub-MOC routing** (see `WIKI_SCHEMA.md`, Sub-MOC Architecture): resolve the note's `field` + `subfield`, compute `fields/{field-slug}/MOC_{Title_Case_Underscore(subfield)}.md` (kebab-case to Title_Case, deterministic, no map needed). If it does not exist, create it from `templates/submoc.md` and add a line to the field MOC's Sub-MOCs section; if the field MOC does not exist, create it from `templates/moc.md` (named `MOC_` plus the display title in `field_titlecase_map`, spaces as underscores) and link it from `fields/MOC_Wiki.md`. Add the note under the right section of the sub-MOC (Concept Notes, Method Notes, Papers, Books), never in the field MOC. Concept and method notes are routed by their own `field` and `subfield`; a paper has neither, so list it under the sub-MOC of its main concept or method note. Entries are **append-ordered**: add at the END of the section.
+- **Sub-MOC routing** (see `WIKI_SCHEMA.md`, Sub-MOC Architecture): resolve the note's `field` + `subfield` and get the sub-MOC path from `python <kit>/tools/wiki_paths.py moc {field} {subfield}` (and the field MOC's from `... moc {field}`). Never compose a MOC name by hand: the rule (kebab-case to Title_Case for a sub-MOC, the display title in `field_titlecase_map` for a field MOC) yields `MOC_Ml_Sport` where a wiki may already have `MOC_ML_Sport`, and `moc_names` in the config records those. If the sub-MOC does not exist, create it from `templates/submoc.md` and add a line to the field MOC's Sub-MOCs section; if the field MOC does not exist, create it from `templates/moc.md` and link it from `fields/MOC_Wiki.md`. Add the note under the right section of the sub-MOC (Concept Notes, Method Notes, Papers, Books), never in the field MOC. Concept and method notes are routed by their own `field` and `subfield`; a paper has neither, so list it under the sub-MOC of its main concept or method note. Entries are **append-ordered**: add at the END of the section.
 - **Check 13 hits** (an alias of a note used unlinked in another): link the alias in the note it fired on; it is informational, but a fresh wiki accumulates them on the first ingest.
 - **`log.md`**: append
   ```

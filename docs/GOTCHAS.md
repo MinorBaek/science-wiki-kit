@@ -8,7 +8,7 @@
 >
 > **Which sections to read first**
 > - Before `wiki-ingest` or `wiki-ingest-book`: sections 1, 2, 3 and 5.
-> - Before `wiki-synthesize`: sections 1, 4 and 6.
+> - Before `wiki-synthesize`: sections 1, 4 and 6; for the evidence check against the PDF, also sections 2 and 3.
 > - Before `wiki-lint`, or when a batch of corrections has just landed: sections 4, 5 and 7.
 >
 > Items tagged **[Windows]** apply only to that platform. Items that mention a reference manager are about
@@ -68,6 +68,19 @@
 - A stub is not necessarily the paper you think: it can be a different paper, a book chapter, or two siblings
   conflated. Resolve the real source and compare authors, year and journal against both the stub and the
   citing note's reference list. If it is a different paper, ingest it as a NEW note.
+- **The PDF paired with a note can be another work**: a sibling paper of the same group, a complete copy saved
+  under another paper's file name, a library record filed under a misspelt author. Check the first page (title,
+  authors, venue) every time; a title-similarity score is blind to near-identical titles from one group. Before
+  declaring "no PDF", search the library by DOI and by title (the file can hang from another record) and look
+  outside the library.
+- **The PDF version matters more for quotes than for figures.** Preprints, accepted manuscripts and online-first
+  copies are common and often unmarked. Checked figures rarely change between versions, but a verbatim quote can be
+  missing from the published one, and a submitted manuscript attached in place of the article can report a
+  different number of included studies. Record the version you checked in the seal.
+- **Book offsets are per chapter, not per book**: within one book the PDF-to-printed offset ranged over tens of
+  pages. Probe the first AND the last page of each chapter (the last PDF page of a chapter can be the next part's
+  divider), expect e-books with no printed folios, and do not read an article number in `pages` as a defect.
+  Procedure in `wiki-ingest-book` (page-offset calibration).
 
 **Extracting text**
 - **Always `pdftotext -enc UTF-8`** (or use a library returning Unicode). Without it some builds emit Latin-1
@@ -83,6 +96,18 @@
   identifiers (which no numeric screen can see). When a value looks odd or contradicts the sentence next to it,
   **render the page before reasoning about it**. Prefer the publisher XML (PMC JATS, `<kit>/tools/pmc_tables.py`)
   for tables when the paper has a PMCID. If you only have extracted text, do not propagate the row.
+- **Other glyphs get lost besides the minus sign**: the prime (`D′` extracted as `D`, which led a note to claim a
+  chapter never mentions `D′`), the degree sign (`°` as `8`), `=`, `≤`, `±`, and ligatures such as `tt` or `fi` that
+  break a string match. The layout and non-layout extractions can disagree on the same glyph: grep both, then render.
+  A quote matcher's miss is usually the tool (ligatures, interleaved columns, running heads, a reference number or a
+  parenthesised p in mid-sentence); two-column PDFs often match only without layout.
+- **Scanned pages and pages in other languages are read on the rendered image.** A noisy OCR layer produced a false
+  "not in the source".
+- **When abstract, text, table and figure disagree, record both versions** in the source note and the seal, and do
+  not "correct" the note toward one side. The table usually wins for a paper's own data, but sometimes the figure or
+  the abstract does; impossible statistic/p pairs and internally inconsistent figures are quoted as printed, with the
+  discrepancy. A misprint is declared, never fixed in silence. (This extends Source-Fidelity Rule 3 of
+  `docs/WIKI_SCHEMA.md`.)
 - **[Windows]** Write extracted text to a path the file-reading tool can open: in Git Bash on Windows, `/tmp` is not a path
   Windows tools can see. Use the project temp folder.
 - If the reference manager's fulltext exceeds the inline limit it is persisted to a file: read that path, do
@@ -105,7 +130,14 @@ Rules (`docs/WIKI_SCHEMA.md`, applied by `wiki-ingest`); the rest survive a grep
 4. **Loose `evidence_level`.** Single-arm pre/post is `cohort`; groups without randomization are `CT`;
    consensus or opinion is `narrative`.
 5. **Missing provenance and metadata.** The single largest fix class: back-fill `source_verification`, volume,
-   issue, pages.
+   issue, pages. A bulk back-fill of volume and pages taught four things: (a) the library's PDF can be the version
+   before pagination (in one pilot, three of ten had neither volume nor pages anywhere in their text), so a value
+   taken from a registry needs a second registry independent of Crossref (PubMed, for example) agreeing field by
+   field; (b) when print and registry disagree, print wins and a human resolves the row; (c) each row of a batch
+   write declares its own citekey and DOI, and the write aborts if the note's frontmatter does not confirm them
+   (asserts that check shape cannot see a reused loop variable stamping one paper's data into other notes; the
+   identity guard caught a hand-mistyped DOI); (d) no row is written without a human approving it, and an existing
+   field is never overwritten.
 6. **A/B swaps.** A value attached to the wrong group, side or variable (left/right, dominant/non-dominant,
    a sign flipped). Label every value with its group.
 7. **Propagation to sibling notes.** The error was copied into concepts, MOCs and backlinks.
@@ -136,6 +168,63 @@ Rules (`docs/WIKI_SCHEMA.md`, applied by `wiki-ingest`); the rest survive a grep
     nothing. Compare the list element by element against the paper's.
 14. **The right figure of the wrong object.** Covered in section 1: nothing false to grep; the study measured a
     different model than the note is about. Applies most to method notes where several models share a chapter.
+
+Patterns 15–28 come from checking synthesis entries against the PDF, where most entries never checked had at least
+one defect. None leaves a value to grep: they are questions to ask while reading, and the checking brief
+(`skills/wiki-synthesize/references/CHECK-BRIEF.md`) puts them to the checker.
+
+15. **Within-group change read as a between-group or treatment effect.** The most repeated reading error; one
+    study's within-group change reached several notes as the effect of the intervention. Ask for the group × time
+    interaction: a within-group d is not an interaction d, a baseline difference between groups (patients versus
+    healthy) is not an intervention effect, and the paper's own significance threshold applies.
+16. **A null read as equivalence; a correlation read as agreement or prediction.** "Identical", "interchangeable",
+    "without sacrificing" written over a non-significant difference, often with a small sample or low power; a high
+    r between two methods with different means read as agreement; a correlation written as "predicts". An
+    unreported result is not a reported null.
+17. **The design read stronger than it is.** Allocation by team, club or school written as an RCT; "randomized or
+    quasi-randomized" as RCT; pre/post without control as `CT`. `evidence_level` belongs to the whole work, the tally
+    follows the source note's level, and a wrong level is fixed in the source note, not in the tally.
+18. **Validity versus reliability, and inherited figures.** Validity credited to a study that only uses a device and
+    cites someone else's validation; a reliability study written as "validated"; an ICC or CV that the work quotes
+    from an earlier study (sometimes older than the device) hung on the work as its own.
+19. **Dependent sources counted as independent.** Reviews that share trials, several works reproducing one original
+    study, two papers on one sample or a subset of it, a review cited alongside a trial it contains, papers of one
+    group whose samples may overlap, two works citing the same origin. Lower the confidence, and the state if it
+    rested on convergence.
+20. **The type of work limits what it supports.** A press release, a short commentary, a hypothesis paper, a
+    conference abstract or an opinion piece; a reporting guideline read as a methods guideline; a clinical protocol
+    read as a dose, or a review's suggested protocol read as the dose its trials used; normative values read as
+    thresholds; a review's tables read as its conclusions (find the sentence in its Discussion or Conclusions); a
+    review that lists a method as emerging validates nothing.
+21. **Advice hardened into a rule.** "Should", "may", "advised", "a rough guide" became "must", "mandatory",
+    "never", "superseded", "resolved"; a call for future research became a recommendation; and the direction can
+    flip (a minimum read as a ceiling). The `hedge` class at its most consequential.
+22. **A chapter loaded with another work's rules.** Thresholds, corrections or formulas standard in the field,
+    attributed to a chapter that never states them (they were in a sibling chapter, another book, or nowhere).
+    Search the term in the chapter before attributing it. A table the wiki derived (interpolated, recomputed) is
+    marked as the wiki's calculation.
+23. **Status labels and settled debates the source does not give.** "Gold standard", "canonical", "consensus",
+    "dominant" (for "one of the most used"); an open debate written as resolved; a "gap" the work actually addresses.
+24. **Inversions cluster where the wiki already had a story.** "Adaptation" where the source says risk factor,
+    "protective" for susceptibility, "masked by compensation" where the source says there is no compensation. Be most
+    suspicious of the sentence that best fits the note's theme.
+25. **Small slips with large effects.** Animal or in-vitro work given as human; a laboratory's experience or opinion
+    given as a rule; one or two subjects given as a norm; an exception stated wider than the source; a figure from the
+    neighbouring paragraph, or composed from a table and the text; a reference-list title read as a finding; a model
+    validated by windows or records rather than by subject presented as ready for deployment.
+26. **The wiki corrects itself wrongly.** An old correction can be the error, and its seal will defend it; the source
+    note can keep the old verdict after the seal that corrects it (after sealing, grep the source note for the
+    corrected word); a block can be corrected while the body keeps the old form.
+27. **A statistical improvement sold as a clinical threshold.** An exclusivity or universality quantifier ("only",
+    "all arms", "both groups", "no other") glued to a threshold (MCID, MDC, SWC). Improving and crossing the threshold
+    can split the arms in opposite directions: one arm alone crossed the MCID while nearly every arm, the untreated
+    control included, improved. Ask of each entry: improvement or crossing, and in how many arms exactly? A screen for
+    the co-occurrence is a reading list, never a verdict or a blocking check.
+28. **A secondary citation dressed as the work's own finding.** The figure is in the source note, so every value
+    check passes; what is false is the provenance the line implies (the work cites the figure from other studies).
+    Check whether the work measured it or inherits it. A screen over source notes sees only the provenance a source
+    note recorded: its zero means "no source note records an inherited figure", not "no note misattributes", and in
+    one trial its top leads were all false positives. A reading list, never a blocking check.
 
 Related: **when the studies included in a review do not match the wiki's source notes for those studies, check the
 review's bibliography against Crossref (DOI and title) before propagating any of its figures**, with positive
@@ -206,6 +295,12 @@ no per-file check sees it.
 - **Routing: by the function measured, not by the surface name** (RPE used to prescribe load is a different
   construct from the session-RPE method; two products from the same manufacturer measuring different things
   are different notes). Keep a list of confirmed rulings.
+- **A new concept or method note can collide with a note outside the wiki.** Obsidian resolves `[[Name]]` by file
+  stem across the whole vault, so a new `concepts/X.md` that shares its stem with a project or manuscript note
+  elsewhere in the vault makes every bare `[[X]]` ambiguous, on both sides. Before creating the note, search the
+  whole `vault_root`, not only `wiki_root` (command in `wiki-ingest`, step 7), and on a hit stop and ask for a
+  distinct name or path-qualified links. This is not the concept/method twin of section 3, pattern 10, which lives
+  inside the wiki.
 - **The Edit tool and descriptions.** When an edit trims an existing list entry's description and inserts a
   new entry after it, the removed text can reappear glued to the NEXT entry. Include both full descriptions
   in the new text, or re-read the affected lines right after the edit.
@@ -236,6 +331,30 @@ no per-file check sees it.
   entry of the block, so an entry can hang a figure from the wrong source among its own note's sources, and a
   mis-attributed figure that is also anchored passes all five checks. The PDF check is the only defence.
   Sibling pattern: soldering two independent proportions from one source into a subgroup nobody reports.
+- **A defect can live in the body or in the block, not necessarily both.** An inversion was found only in a note's
+  body in one case and only in its block in another. Check the block even when the body agrees with the source,
+  and the body even when the block does.
+- **A checker's false "not found" ends up in the orchestrator's seal.** False absences from subagents kept coming
+  (a stem such as `randomi` searched as `randomly`), and once one is in a seal, later proposals inherit it: one
+  false seal carried over a dozen coherent proposals with it. Re-read every absence in the PDF before it reaches a
+  seal. A subagent can also derive a figure from the means instead of finding the printed one.
+- **Brief wording is read literally.** "Judge only against this note" was read as "skip the works already sealed"
+  (write "CHECK the already-sealed works too"); subagents told to read whole notes started with `grep` until the
+  full read, by line ranges, was ordered in the first prompt; and fitting the prompt to the dominant defect class
+  paid ("flag only what contradicts the magnitude the seal states" produced no false positives).
+- **Triage proposals need the source paragraph.** Subagents proposing fixes from seals proposed downgrades the
+  source contradicts (removing "RCT" from a randomised trial, "significantly" from p < 0.001), inverted adjectives,
+  called contradictory a figure that measures something else, and added new figures to blocks. Apply only what the
+  seal covers, after re-reading the whole paragraph (see `docs/SEALS.md` for why narrow seals mislead triage).
+- **Removing a figure can orphan another that matched it by chance**, so run the screens after applying a batch,
+  not before. An orphan figure that the source does print is fixed by filling the source note, not by deleting it
+  from the note.
+- **A state changes only when the sources disagree or the core claim does not hold.** Otherwise lower the confidence
+  and keep the glyph. Every state transition goes to the human, and a change to a claim shared by several notes is
+  propagated to all of them.
+- **A backlog item written as a fact is a hypothesis.** Items of the form "note X has the wrong figure" failed
+  repeatedly when checked, and a backlog reviewed against the PDF often sided with the wiki or with an erratum in
+  the source.
 - **Tally per source note, not per work.** In `(N src: ...)`, N counts distinct `[[wikilinks]]`; five chapters of one
   book are five sources there and ONE work for Check 15. Both are right because they answer different
   questions (how well the sentence is backed versus whether the note qualifies). A type with no number means

@@ -30,7 +30,7 @@ except ImportError:  # running from a checkout without `pip install -e .`
     else:
         sys.exit("wikikit not found: run `pip install -e <kit>` or keep the skills inside the kit checkout")
 
-from wikikit.config import load_config  # noqa: E402
+from wikikit.config import require_config  # noqa: E402
 from wikikit.lint import fixes  # noqa: E402
 from wikikit.lint.context import Context  # noqa: E402
 from wikikit.textio import read_text, write_text  # noqa: E402
@@ -52,7 +52,7 @@ def main():
     p.add_argument("--log", default=None)
     a = ap.parse_args()
 
-    root, cfg = load_config(a.vault_root)
+    root, cfg = require_config(a.vault_root)
     ctx = Context(root, cfg)
     out_dir = Path(a.out_dir)
 
