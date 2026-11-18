@@ -52,4 +52,7 @@ Full procedure in `references/SYNTHESIS-WORKFLOW.md`. Summary: read contracts, r
 
 - `references/SYNTHESIS-WORKFLOW.md`: the detailed procedure, the block template, guard logic, re-synthesis handling.
 - `references/BATCH-WORKFLOW.md`: batch mode, the orchestrator loop, the subagent brief, the V1-V5 write gate, the escalation triggers.
+- `references/BRIEF-RULES.md`: the drafting rules distilled from past waves; give it with the subagent brief, and read it before drafting a block yourself.
+- `references/CHECK-BRIEF.md`: the brief for the subagent that checks entries against the PDF (step 5b).
+- `references/RESYNTHESIS-BRIEF.md`: the addendum for a note that already has a block (step 9).
 - `scripts/synth_validate.py`: the write gate and a whole-wiki sweep; `--note` without `--block` re-checks the block the note already carries. `scripts/synth_write.py`: block insertion; it runs the same gate and refuses anything but CLEAN. `<kit>/tools/seal.py`: sealing.

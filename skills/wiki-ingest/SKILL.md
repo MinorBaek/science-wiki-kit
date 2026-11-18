@@ -133,13 +133,15 @@ Only rows that survive go to steps 6 and 7.
 For each concept from step 5:
 1. Check whether `concepts/{Concept_Name}.md` exists.
 2. **Exists**: append the finding with a `[[paper_note]]` backlink under "Key Findings". Update `related_concepts` if new links emerge.
-3. **Does not exist**: apply the creation rules in `references/CONCEPT-PROPAGATION.md` first.
+3. **Does not exist**: apply the creation rules in `references/CONCEPT-PROPAGATION.md` and the homonym check (step 7) first.
 
 ### 7. Propagate to method notes
 For each method from step 5:
 1. Check whether `methods/{Method_Name}.md` exists.
 2. **Exists**: add the paper under "Papers Using This Method".
-3. **Does not exist**: create from `templates/method.md`.
+3. **Does not exist**: run the homonym check below, then create from `templates/method.md`.
+
+**Homonym check (before creating any concept or method note).** Obsidian resolves `[[Name]]` by file stem across the whole vault, so a new note that shares its stem with a note outside the wiki (a project or manuscript note) makes every bare link to either ambiguous. From `<vault_root>`, run `find . -path "./<wiki_root>" -prune -o -iname "{Name}.md" -print` (both values from `wiki.config.json`; use `find`, not a glob tool, which has returned false negatives). On a hit, stop: report the path and propose a distinct name (for example `{Name}_Method`) or path-qualified links, and do not create the note until the user answers.
 
 ### 8. Update paper note frontmatter
 Fill `concepts_touched` with the concept and method notes created or updated.
