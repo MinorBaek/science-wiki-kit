@@ -7,16 +7,23 @@ Input is a JSON file:
              ["Example_Concept", "Jones_2019_RCT", "Corrected (figure): 14% in the block, 12% in Table 2."]]}
 
 For each work it appends one segment per (note, work) pair to the END of the source note's
-`source_verification` line, `[DATE, TAG, NOTE] Checked against PDF: TEXT`, and sets `last_verified`.
+`source_verification` line, `[DATE, TAG, NOTE] Checked against PDF: TEXT`.
 The text is exactly the CLEAN text when the check found nothing, or `Corrected (<class>): ...` /
 `Qualified (<class>): ...` with one of: figure, hedge, inference, attribution, entity, omission,
 overreach, inversion. Take the date from `date +%F`, never estimate it.
 
-Writes NOTHING if a source note does not exist, if its `source_verification` is a block scalar or list, or
-if a text contains a double quote. Preserves each file's line endings.
+`last_verified` of the source note is NOT moved by a pair seal (it would put every block citing the work
+into Check 15 `stale`). It is set when the source note has none, and for the works named in
+`--source-corrected`: pass them when the source note ITSELF was corrected against the PDF (a figure fixed in
+the paper note), not when the correction landed in the citing note.
+
+Writes NOTHING if a source note does not exist, if its `source_verification` is a block scalar or list, if
+a text contains a double quote, or if `--source-corrected` names a work the spec does not seal. Preserves
+each file's line endings.
 
   python tools/seal.py seals.json --dry-run
   python tools/seal.py seals.json
+  python tools/seal.py seals.json --source-corrected Jones_2019_RCT
 """
 import argparse
 import json
@@ -42,6 +49,8 @@ def main():
     ap.add_argument("spec")
     ap.add_argument("--vault-root", default=".")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--source-corrected", nargs="+", default=[], metavar="WORK",
+                    help="works whose source note was itself corrected: their last_verified is set to the date")
     a = ap.parse_args()
 
     root, cfg = require_config(a.vault_root)
@@ -49,7 +58,8 @@ def main():
     wiki = wiki_path(root, cfg)
     try:
         done = seals.append_seals(wiki, cfg, [tuple(s) for s in spec["seals"]], spec["date"], spec["tag"],
-                                  dry_run=a.dry_run, source=spec.get("source", "PDF"))
+                                  dry_run=a.dry_run, source=spec.get("source", "PDF"),
+                                  source_corrected=set(a.source_corrected))
     except seals.SealError as exc:
         sys.exit("ABORT (nothing written): %s" % exc)
     for path, eol, n in done:

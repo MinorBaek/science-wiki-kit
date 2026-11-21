@@ -194,6 +194,33 @@ class SealTests(unittest.TestCase):
         self.assertTrue(seals.names_note(sv, "Example_Concept"))
         self.assertFalse(seals.names_note(sv, "Other_Note"))
 
+    def test_pair_seal_keeps_an_existing_date(self):
+        # Issue #5: a pair seal checks a citing note's claims, not the source note. Re-dating the source
+        # would put every other block citing it into Check 15 `stale`.
+        write_text(self.ficha, '---\nstatus: final\nsource_verification: "fulltext"\nlast_verified: 2026-10-01\n---\nb\n')
+        seals.append_seals(self.wiki, self.cfg, [("N_One", "P_2020_A", seals.CLEAN_TEXT),
+                                                 ("N_Two", "P_2020_A", "Corrected (hedge): fixed in N_Two.")],
+                           "2026-11-06", "t")
+        t = read_text(self.ficha)
+        self.assertIn("last_verified: 2026-10-01", t)
+        self.assertIn("[2026-11-06, t, N_Two] Checked against PDF: Corrected (hedge)", t)
+        write_text(self.ficha, '---\nstatus: final\nsource_verification: "fulltext"\nlast_verified:\n---\nb\n')
+        seals.append_seals(self.wiki, self.cfg, [("N_One", "P_2020_A", seals.CLEAN_TEXT)], "2026-11-06", "t")
+        self.assertIn("last_verified: 2026-11-06", read_text(self.ficha))  # empty counts as missing (Check 28)
+
+    def test_source_corrected_sets_the_date_of_the_named_works_only(self):
+        write_text(self.ficha, '---\nstatus: final\nsource_verification: "fulltext"\nlast_verified: 2026-10-01\n---\nb\n')
+        other = self.wiki / "papers" / "Q_2021_B.md"
+        write_text(other, '---\nstatus: final\nsource_verification: "fulltext"\nlast_verified: 2026-10-01\n---\nb\n')
+        seals.append_seals(self.wiki, self.cfg, [("N_One", "P_2020_A", "Corrected (figure): 14 in Table 2."),
+                                                 ("N_One", "Q_2021_B", seals.CLEAN_TEXT)],
+                           "2026-11-06", "t", source_corrected={"P_2020_A"})
+        self.assertIn("last_verified: 2026-11-06", read_text(self.ficha))
+        self.assertIn("last_verified: 2026-10-01", read_text(other))
+        with self.assertRaises(seals.SealError):  # a work the spec does not seal is a typo, not a no-op
+            seals.append_seals(self.wiki, self.cfg, [("N_One", "P_2020_A", seals.CLEAN_TEXT)], "2026-11-06", "t",
+                               source_corrected={"Q_2021_B"})
+
     def test_plain_scalar_is_quoted_and_block_scalar_refused(self):
         write_text(self.ficha, "---\nstatus: final\nsource_verification: fulltext\n---\nbody\n")
         seals.append_seals(self.wiki, self.cfg, [("N_One", "P_2020_A", seals.CLEAN_TEXT)], "2026-11-06", "t")

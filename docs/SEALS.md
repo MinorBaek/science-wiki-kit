@@ -40,7 +40,9 @@ python <kit>/tools/seal.py seals.json
  "seals": [["Example_Concept", "Smith_2020_SR", "what the block attributes to this work holds up."]]}
 ```
 
-The tool appends to the end of the existing value (an unquoted single-line value is quoted on the way in), sets `last_verified`, preserves the file's line endings, and **writes nothing at all** if any source note is missing, if its `source_verification` is a block scalar or a list, or if a text contains a double quote.
+The tool appends to the end of the existing value (an unquoted single-line value is quoted on the way in), preserves the file's line endings, and **writes nothing at all** if any source note is missing, if its `source_verification` is a block scalar or a list, or if a text contains a double quote.
+
+A pair seal does **not** move the source note's `last_verified`: it checks what a citing note says about the work, and a new date would put every other block citing that work into Check 15 `stale`. The tool sets `last_verified` only when the source note has none, and for the works passed with `--source-corrected WORK ...`. Pass a work there when its source note **itself** was corrected or completed against the PDF (a figure fixed in the paper note, a missing table added); a `Corrected (...)` seal whose fix landed in the citing note takes no flag.
 
 ## Writing a seal the next reader can use
 

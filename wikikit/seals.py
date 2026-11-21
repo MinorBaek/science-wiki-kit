@@ -39,18 +39,25 @@ def format_segment(date, tag, note, text, source="PDF"):
     return "[%s, %s, %s] Checked against %s: %s" % (date, tag, note, source, text.strip())
 
 
-def append_seals(wiki, cfg, seals, date, tag, dry_run=False, source="PDF"):
-    """Append seal segments to the source notes and set their `last_verified`.
+def append_seals(wiki, cfg, seals, date, tag, dry_run=False, source="PDF", source_corrected=()):
+    """Append seal segments to the source notes.
 
-    `seals` = [(note, work, text), ...]. Aborts without writing ANYTHING when a source note does not exist,
-    its `source_verification` is not a double-quoted single line, or a text contains a double quote.
-    Preserves each file's EOL. Returns [(path, eol, n_segments)].
+    `seals` = [(note, work, text), ...]. A pair seal checks a citing note's claims, not the source note, so
+    `last_verified` is set only for the works in `source_corrected` (their source note was itself corrected
+    against the PDF) and for a source note that has none yet (Check 28). Re-dating every sealed work would
+    put every other block citing it into Check 15 `stale`.
+    Aborts without writing ANYTHING when a source note does not exist, its `source_verification` is not a
+    double-quoted single line, a text contains a double quote, or `source_corrected` names a work the seals
+    do not cover. Preserves each file's EOL. Returns [(path, eol, n_segments)].
     """
     segs = {}
     for note, work, text in seals:
         if '"' in text:
             raise SealError("double quote in the seal of %s/%s" % (note, work))
         segs.setdefault(work, []).append(format_segment(date, tag, note, text, source))
+    stray = set(source_corrected) - set(segs)
+    if stray:
+        raise SealError("source_corrected names works with no seal in this batch: %s" % ", ".join(sorted(stray)))
 
     staged = {}
     for work, parts in segs.items():
@@ -80,7 +87,8 @@ def append_seals(wiki, cfg, seals, date, tag, dry_run=False, source="PDF"):
             t = fm + t[head.end():]
         else:
             t = frontmatter.set_key(t, "source_verification", '"%s"' % " ".join(parts))
-        t = frontmatter.set_key(t, "last_verified", date)
+        if work in source_corrected or not (frontmatter.get_raw(t, "last_verified") or "").strip(" \"'"):
+            t = frontmatter.set_key(t, "last_verified", date)
         staged[path] = (eol, t, len(parts))
 
     for path, (eol, t, n) in staged.items():

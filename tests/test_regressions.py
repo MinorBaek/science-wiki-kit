@@ -149,6 +149,21 @@ class Checks(Wiki):
         self.assertEqual(out, [])
 
 
+class PairSealAndCheck15(Wiki):
+    def test_sealing_one_pair_does_not_make_another_block_stale(self):
+        from wikikit import seals
+        write_text(self.root / "wiki.config.json", '{"synthesis": {"min_sources": 1}}')
+        write_text(self.wiki / "papers" / "Smith_2020_Real.md", '---\ntype: paper\nstatus: final\n'
+                   'source_verification: "fulltext, tables"\nlast_verified: 2026-11-01\n---\n# p\n')
+        with_block = NOTE.replace("## Key Findings", (BLOCK % "12") + "\n## Key Findings")
+        for name in ("A_Concept", "B_Concept"):
+            write_text(self.wiki / "concepts" / (name + ".md"), with_block)
+        self.note.unlink()
+        root, cfg = load_config(self.root)
+        seals.append_seals(self.wiki, cfg, [("A_Concept", "Smith_2020_Real", seals.CLEAN_TEXT)], "2026-11-21", "t")
+        self.assertEqual(checks_content.check15(self.ctx()).counters["check15_stale"], 0)
+
+
 class AdoptionAuditFixes(Wiki):
     """Defects found while migrating a large existing wiki onto the kit (2026-11-18)."""
 
