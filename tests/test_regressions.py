@@ -120,6 +120,19 @@ class LintEntryPoint(unittest.TestCase):
             self.assertFalse((Path(d) / "_temp").exists())
 
 
+class DefaultOutDir(Wiki):
+    """Without --out-dir the lists go next to wiki.config.json, not into the folder the script runs from."""
+
+    def test_lint_and_fix_default_to_the_wiki_temp(self):
+        with tempfile.TemporaryDirectory() as elsewhere:
+            r = run(LINT, "--vault-root", self.root, "--only", "1", cwd=elsewhere)
+            self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+            self.assertFalse((Path(elsewhere) / "_temp").exists())
+            self.assertTrue((self.root / "_temp").is_dir())
+            r = run(LINT.parent / "fix.py", "--vault-root", self.root, "index", cwd=elsewhere)
+            self.assertIn(str(self.root.resolve() / "_temp"), r.stdout + r.stderr)  # macOS: /var -> /private/var
+
+
 class SetKitDir(unittest.TestCase):
     def test_accepts_a_config_saved_with_a_bom(self):
         with tempfile.TemporaryDirectory() as d:

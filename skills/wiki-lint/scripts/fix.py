@@ -39,7 +39,7 @@ from wikikit.textio import read_text, write_text  # noqa: E402
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--vault-root", default=".")
-    ap.add_argument("--out-dir", default="_temp")
+    ap.add_argument("--out-dir", default=None, help="default: _temp next to wiki.config.json")
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("index")
     p.add_argument("--out", default=None)
@@ -54,7 +54,7 @@ def main():
 
     root, cfg = require_config(a.vault_root)
     ctx = Context(root, cfg)
-    out_dir = Path(a.out_dir)
+    out_dir = Path(a.out_dir) if a.out_dir else Path(root) / "_temp"
 
     if a.cmd == "index":
         missing = out_dir / "wiki_check7_index_missing.txt"

@@ -46,7 +46,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--vault-root", default=".")
     ap.add_argument("--only", help="comma-separated check numbers, e.g. 1,5,12")
-    ap.add_argument("--out-dir", default=None, help="default: _temp (a throwaway folder for --self-test)")
+    ap.add_argument("--out-dir", default=None, help="default: _temp next to wiki.config.json (a throwaway folder for --self-test)")
     ap.add_argument("--json", help="also write the counters as a JSON object to this file")
     ap.add_argument("--self-test", action="store_true")
     a = ap.parse_args()
@@ -74,7 +74,7 @@ def main():
         return 2
     ctx = Context(root, cfg)
     print("Loaded wiki notes: %d" % len(ctx.notes))
-    counters = engine.run(ctx, only=only, out_dir=a.out_dir or "_temp")
+    counters = engine.run(ctx, only=only, out_dir=a.out_dir or Path(root) / "_temp")
     if a.json:  # for scripts: parsing the printed lines breaks whenever a label changes
         write_text(Path(a.json), json.dumps(counters, indent=1, sort_keys=True) + "\n")
     return 0
