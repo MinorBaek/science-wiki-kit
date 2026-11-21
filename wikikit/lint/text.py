@@ -15,6 +15,15 @@ def split_lines(text):
     return re.split(r"\r?\n", text)
 
 
+def fm_str(value):
+    """frontmatter value as a string (a list collapses to its first item, None to '')."""
+    if value is None:
+        return ""
+    if isinstance(value, list):
+        return str(value[0]) if value else ""
+    return str(value)
+
+
 def preprocess_body(body):
     """Strip HTML comments and fenced code, and unescape table pipes. Removes lines, so line numbers
     computed from the result are NOT file line numbers."""
