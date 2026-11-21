@@ -8,18 +8,11 @@ from ..synthesis import below_fulltext
 from ..textio import read_text
 from ..vault import WIKILINK
 from .result import Result
+from .text import fm_str as _s
 from .text import split_lines, table_cell_count
 
 WARN = "⚠"
 _SUBJECT = re.compile(r"\[\[([^\]|#]+)")
-
-
-def _s(value):
-    if value is None:
-        return ""
-    if isinstance(value, list):
-        return str(value[0]) if value else ""
-    return str(value)
 
 
 def _letter(ch):

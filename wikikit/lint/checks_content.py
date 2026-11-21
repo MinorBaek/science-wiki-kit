@@ -4,18 +4,10 @@ import re
 
 from ..synthesis import below_fulltext
 from .result import Result
+from .text import fm_str as _s
 from .text import preprocess_body, remove_diacritics, split_lines
 
 _CHAPTER_SUFFIX = re.compile(r"_Ch\d+[A-Za-z]?$")
-
-
-def _s(value):
-    """frontmatter value as a string (a list collapses to its first item, None to '')."""
-    if value is None:
-        return ""
-    if isinstance(value, list):
-        return str(value[0]) if value else ""
-    return str(value)
 
 
 def _iso(value):
