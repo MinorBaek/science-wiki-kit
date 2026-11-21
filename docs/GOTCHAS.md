@@ -362,7 +362,9 @@ no per-file check sees it.
   entry does not cite is.
 - **`last_verified` is written together with `source_verification`**, including for hand-written partial seals
   and for any source note filled or corrected against the fulltext: filling a source note is a verification. Check 15's
-  `stale` reads only `last_verified`; without it a corrected source never re-flags the blocks citing it.
+  `stale` reads only `last_verified`; without it a corrected source never re-flags the blocks citing it. `seal.py`
+  moves it only with `--source-corrected` (or when the source note has none): a plain pair seal leaves the source
+  note's date alone, or every block citing the work would turn `stale` for nothing (issue #5).
   `synth_write.py` adds `last_verified` to the note when it writes the block if the note has none; an existing
   date is left as it is.
 - **Check 15 `stale` is blind to equal dates, permanently** (it compares by day with a strict `>`): a block
