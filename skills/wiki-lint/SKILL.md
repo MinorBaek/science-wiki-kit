@@ -110,7 +110,7 @@ Flags, configuration keys and the files each check writes: `references/cli-refer
 
 ## Safety rules
 
-- The lint is read-only against the wiki; it only writes the per-check lists into `--out-dir` (default `_temp/`).
+- The lint is read-only against the wiki; it only writes the per-check lists into `--out-dir` (default `_temp/` next to `wiki.config.json`, wherever the script is run from).
 - `fix.py` mutates notes only where it reports (backlinks, status), keeps each file's line endings, and logs every change for rollback.
 - When unsure whether a heuristic change is right, write the fixture first, watch the self-test fail, then make the change.
 - **Cache directories are never versioned** (`_temp/` and friends stay in `.gitignore`). A versioned measurement gets read months later as if it were today's.
