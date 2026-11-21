@@ -67,6 +67,20 @@ class NumberTests(unittest.TestCase):
         self.assertEqual(synthesis.numbers("from 2016 to 2019", is_block=True), ["2016", "2019"])
         self.assertIn("2003", synthesis.numbers("Burkhart et al. 2003 found 5"))
 
+    def test_a_capitalised_word_before_a_number_is_not_a_citation(self):
+        # A sentence-initial word is not a surname: these figures must reach V2.
+        for text, n in (("Overall 2012 athletes improved", "2012"), ("Pooled 1984 players", "1984"),
+                        ("From 2016 to 2019, incidence rose", "2016")):
+            with self.subTest(text):
+                self.assertIn(n, synthesis.numbers(text, is_block=True))
+        # Still citations: citation punctuation follows, or the block links a work of that year.
+        for text in ("(Smith et al., 2020)", "Smith and Jones 2019;", "though Aruga (2006) found",
+                     "Smith 2020 reported it [[Smith_2020_Real]]"):
+            with self.subTest(text):
+                self.assertNotIn("2020", synthesis.numbers(text, is_block=True))
+                self.assertNotIn("2019", synthesis.numbers(text, is_block=True))
+                self.assertNotIn("2006", synthesis.numbers(text, is_block=True))
+
 
 class GateTests(unittest.TestCase):
     EXPECT = {"note_clean": "CLEAN", "note_fab_source": "ESCALATE", "note_fab_number": "ESCALATE",

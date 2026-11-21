@@ -55,10 +55,20 @@ def numbers(text, is_block=False):
     t = re.sub(r"\(\s*\d+\+?\s*src[^)]*\)", "", t)  # `7+ src` is a floor, still metadata
     t = re.sub(r"\d{4}-\d{2}-\d{2}", "", t)
     if is_block:
-        # A year glued to a surname, "et al." or "&" is an identifier. Applied to the block ONLY:
-        # subtracting on the note side deletes anchors and accuses blocks of figures the note holds.
+        # A year after "et al." or "&" is an identifier; after a single capitalised word, only when citation
+        # punctuation follows it ("Smith 2020)", "Jones 2019;") or the block links a work of that year
+        # ("Smith 2020 reported ... [[Smith_2020_X]]"). "Overall 2012 athletes" is a figure, not a citation.
+        # Applied to the block ONLY: subtracting on the note side deletes anchors and accuses blocks of
+        # figures the note holds.
+        cited_years = {y for l in vault.links(text) for y in re.findall(r"_((?:19|20)\d\d)(?:_|[a-z]?$)", l)}
         nm = r"[A-Z][A-Za-z’'\-]{1,25}"
-        t = re.sub(r"\b(%s(?:\s+et\s+al\.?)?(?:\s*&\s*%s)?(?:’s|'s)?[,:]?\s*\(?)(?:19|20)\d\d\b" % (nm, nm), r"\1", t)
+        rx = r"\b(%s(?:\s+et\s+al\.?)?(?:\s*&\s*%s)?(?:’s|'s)?[,:]?\s*\(?)((?:19|20)\d\d)\b" % (nm, nm)
+
+        def _cite(m):
+            cites = (re.search(r"\bet\s+al\b|&", m.group(1)) or m.group(2) in cited_years
+                     or re.match(r"[ \t]*(?:[),;.:\]]|\r?\n|$)", t[m.end():]))
+            return m.group(1) if cites else m.group(0)
+        t = re.sub(rx, _cite, t)
     # English thousands separator "2,085" -> "2085", without biting a decimal comma ("1,44", "0,004").
     t = re.sub(r"(?<!\d)([1-9]\d{0,2})(?:,\d{3})+(?!\d)", lambda m: m.group(0).replace(",", ""), t)
     t = re.sub(r"[,·]", ".", t)
